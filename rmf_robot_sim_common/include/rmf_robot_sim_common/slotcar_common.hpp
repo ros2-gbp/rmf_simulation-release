@@ -36,6 +36,26 @@ namespace rmf_robot_sim_common {
 
 // TODO migrate ign-math-eigen conversions when upgrading to ign-math5
 
+//3rd coordinate is yaw
+struct AckermannTrajectory
+{
+  AckermannTrajectory(const Eigen::Vector2d& _x0, const Eigen::Vector2d& _x1,
+    const Eigen::Vector2d& _v1 = Eigen::Vector2d(0, 0),
+    bool _turning = false)
+  : x0(_x0), x1(_x1),
+    v0((x1 - x0).normalized()), v1(_v1),
+    turning(_turning)
+  {}
+  // positions
+  Eigen::Vector2d x0;
+  Eigen::Vector2d x1;
+  // headings
+  Eigen::Vector2d v0;
+  Eigen::Vector2d v1;
+
+  bool turning = false;
+};
+
 // Edit reference of parameter for template type deduction
 template<typename IgnQuatT>
 inline void convert(const Eigen::Quaterniond& _q, IgnQuatT& quat)
@@ -92,17 +112,31 @@ inline Eigen::Isometry3d convert_pose(const IgnPoseT& _pose)
   return tf;
 }
 
-typedef struct TrajectoryPoint
+struct TrajectoryPoint
 {
   Eigen::Vector3d pos;
   Eigen::Quaterniond quat;
   TrajectoryPoint(const Eigen::Vector3d& _pos, const Eigen::Quaterniond& _quat)
   : pos(_pos), quat(_quat) {}
-} TrajectoryPoint;
+};
+
+// steering type constants
+enum class SteeringType
+{
+  DIFF_DRIVE,
+  ACKERMANN
+};
 
 class SlotcarCommon
 {
 public:
+  struct UpdateResult
+  {
+    double v = 0.0; // Target displacement in X (forward)
+    double w = 0.0; // Target displacement in yaw
+    double speed = 0.0; // Target speed
+  };
+
   SlotcarCommon();
 
   rclcpp::Logger logger() const;
@@ -116,7 +150,7 @@ public:
 
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  std::pair<double, double> update(const Eigen::Isometry3d& pose,
+  UpdateResult update(const Eigen::Isometry3d& pose,
     const std::vector<Eigen::Vector3d>& obstacle_positions,
     const double time);
 
@@ -125,17 +159,13 @@ public:
 
   std::array<double, 2> calculate_control_signals(const std::array<double,
     2>& curr_velocities,
-    const std::pair<double, double>& velocities,
-    const double dt) const;
+    const std::pair<double, double>& displacements,
+    const double dt,
+    const double target_linear_velocity = 0.0) const;
 
   std::array<double, 2> calculate_joint_control_signals(
     const std::array<double, 2>& w_tire,
-    const std::pair<double, double>& velocities,
-    const double dt) const;
-
-  std::array<double, 2> calculate_model_control_signals(
-    const std::array<double, 2>& curr_velocities,
-    const std::pair<double, double>& velocities,
+    const std::pair<double, double>& displacements,
     const double dt) const;
 
   void charge_state_cb(const std::string& name, bool selected);
@@ -181,7 +211,9 @@ private:
   std::size_t _sequence = 0;
 
   std::vector<Eigen::Isometry3d> trajectory;
-  std::size_t _traj_wp_idx;
+  std::size_t _traj_wp_idx = 0;
+  std::vector<AckermannTrajectory> ackermann_trajectory;
+  std::size_t _ackermann_traj_idx = 0;
 
   rmf_fleet_msgs::msg::PauseRequest pause_request;
 
@@ -215,6 +247,8 @@ private:
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 
+  SteeringType _steering_type = SteeringType::DIFF_DRIVE;
+
   std::string _current_task_id;
   std::vector<rmf_fleet_msgs::msg::Location> _remaining_path;
 
@@ -236,6 +270,11 @@ private:
 
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
+
+  double _min_turning_radius = -1.0; // minimum turning radius, will use a formula if negative
+  double _turning_right_angle_mul_offset = 1.0; // if _min_turning_radius is computed, this value multiplies it
+
+  bool _reversible = true; // true if the robot can drive backwards
 
   PowerParams _params;
   bool _enable_charge = true;
@@ -271,11 +310,25 @@ private:
 
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
+  void handle_diff_drive_path_request(
+    const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
+
+  void handle_ackermann_path_request(
+    const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
+
   void pause_request_cb(const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg);
 
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
   void map_cb(const rmf_building_map_msgs::msg::BuildingMap::SharedPtr msg);
+
+  UpdateResult update_diff_drive(
+    const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const double time);
+
+  UpdateResult update_ackermann(
+    const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const double time);
 
   bool near_charger(const Eigen::Isometry3d& pose) const;
 
@@ -304,6 +357,19 @@ bool get_element_val_if_present(
 template<typename SdfPtrT>
 void SlotcarCommon::read_sdf(SdfPtrT& sdf)
 {
+  std::string steering_type;
+  get_element_val_if_present<SdfPtrT, std::string>(sdf, "steering",
+    steering_type);
+
+  if (steering_type == "ackermann")
+    _steering_type = SteeringType::ACKERMANN;
+  else if (steering_type == "diff_drive")
+    _steering_type = SteeringType::DIFF_DRIVE;
+
+  RCLCPP_INFO(
+    logger(),
+    "Vehicle uses %s steering", steering_type.c_str());
+
   get_element_val_if_present<SdfPtrT, double>(sdf, "nominal_drive_speed",
     this->_nominal_drive_speed);
   RCLCPP_INFO(
@@ -347,6 +413,20 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     _max_turn_acceleration);
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
+    "min_turning_radius", this->_min_turning_radius);
+  RCLCPP_INFO(
+    logger(),
+    "Setting minimum turning radius to: %f",
+    _min_turning_radius);
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "turning_right_angle_mul_offset", this->_turning_right_angle_mul_offset);
+  RCLCPP_INFO(
+    logger(),
+    "Setting turning right angle multiplier offset to: %f",
+    _turning_right_angle_mul_offset);
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
     "stop_distance", this->_stop_distance);
   RCLCPP_INFO(logger(), "Setting stop distance to: %f", _stop_distance);
 
@@ -361,6 +441,10 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "base_width", this->_base_width);
   RCLCPP_INFO(logger(), "Setting base width to: %f", _base_width);
+
+  get_element_val_if_present<SdfPtrT, bool>(sdf,
+    "reversible", this->_reversible);
+  RCLCPP_INFO(logger(), "Setting reversible to: %d", _reversible);
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_voltage", this->_params.nominal_voltage);

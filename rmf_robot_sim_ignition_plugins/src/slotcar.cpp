@@ -22,6 +22,8 @@
 #include <rmf_robot_sim_common/utils.hpp>
 #include <rmf_robot_sim_common/slotcar_common.hpp>
 
+#include <rmf_fleet_msgs/msg/location.hpp>
+
 using namespace ignition::gazebo;
 
 enum class PhysEnginePlugin {DEFAULT, TPE};
@@ -56,13 +58,19 @@ private:
 
   bool first_iteration = true; // Flag for checking if it is first PreUpdate() call
   bool _read_aabb_dimensions = true;
+  bool _remove_world_pose_cmd = false;
+
+  // Previous velocities, used to do open loop velocity control
+  double _prev_v_command = 0.0;
+  double _prev_w_command = 0.0;
 
   void charge_state_cb(const ignition::msgs::Selection& msg);
 
   void send_control_signals(EntityComponentManager& ecm,
-    const std::pair<double, double>& velocities,
+    const std::pair<double, double>& displacements,
     const std::unordered_set<Entity> payloads,
-    const double dt);
+    const double dt,
+    const double target_linear_velocity = 0.0);
   void init_infrastructure(EntityComponentManager& ecm);
   void item_dispensed_cb(const ignition::msgs::UInt64_V& msg);
   void item_ingested_cb(const ignition::msgs::Entity& msg);
@@ -145,26 +153,33 @@ void SlotcarPlugin::Configure(const Entity& entity,
   {
     std::cerr << "Error subscribing to topic [/slotcar_height]" << std::endl;
   }
+
 }
 
 void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
-  const std::pair<double, double>& velocities,
+  const std::pair<double, double>& displacements,
   const std::unordered_set<Entity> payloads,
-  const double dt)
+  const double dt,
+  const double target_linear_velocity)
 {
   auto lin_vel_cmd =
     ecm.Component<components::LinearVelocityCmd>(_entity);
   auto ang_vel_cmd =
     ecm.Component<components::AngularVelocityCmd>(_entity);
 
-  double v_robot = lin_vel_cmd->Data()[0];
-  double w_robot = ang_vel_cmd->Data()[2];
+  // Open loop control
+  double v_robot = _prev_v_command;
+  double w_robot = _prev_w_command;
   std::array<double, 2> target_vels;
-  target_vels = dataPtr->calculate_model_control_signals({v_robot, w_robot},
-      velocities, dt);
+  target_vels = dataPtr->calculate_control_signals({v_robot, w_robot},
+      displacements, dt, target_linear_velocity);
 
   lin_vel_cmd->Data()[0] = target_vels[0];
   ang_vel_cmd->Data()[2] = target_vels[1];
+
+  // Update previous velocities
+  _prev_v_command = target_vels[0];
+  _prev_w_command = target_vels[1];
 
   if (phys_plugin == PhysEnginePlugin::TPE) // Need to manually move any payloads
   {
@@ -182,6 +197,7 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
         ecm.CreateComponent(payload,
           components::AngularVelocityCmd({0, 0, 0}));
       }
+
       ecm.Component<components::LinearVelocityCmd>(payload)->Data() =
         lin_vel_cmd->Data();
       ecm.Component<components::AngularVelocityCmd>(payload)->Data() =
@@ -334,6 +350,10 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   if (_infrastructure.empty())
     init_infrastructure(ecm);
 
+  // Don't update the pose if the simulation is paused
+  if (info.paused)
+    return;
+
   double dt =
     (std::chrono::duration_cast<std::chrono::nanoseconds>(info.dt).count()) *
     1e-9;
@@ -344,11 +364,12 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   auto pose = ecm.Component<components::Pose>(_entity)->Data();
   auto obstacle_positions = get_obstacle_positions(ecm);
 
-  auto velocities =
+  auto update_result =
     dataPtr->update(rmf_plugins_utils::convert_pose(pose),
       obstacle_positions, time);
 
-  send_control_signals(ecm, velocities, _payloads, dt);
+  send_control_signals(ecm, {update_result.v, update_result.w}, _payloads, dt,
+    update_result.speed);
 }
 
 IGNITION_ADD_PLUGIN(
