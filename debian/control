@@ -1,0 +1,12 @@
+Source: ros-galactic-rmf-robot-sim-gazebo-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-galactic-ament-cmake, ros-galactic-gazebo-dev, ros-galactic-gazebo-ros, ros-galactic-geometry-msgs, ros-galactic-rclcpp, ros-galactic-rmf-building-map-msgs, ros-galactic-rmf-fleet-msgs, ros-galactic-rmf-robot-sim-common, ros-galactic-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-galactic-rmf-robot-sim-gazebo-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-galactic-gazebo-dev, ros-galactic-gazebo-ros, ros-galactic-geometry-msgs, ros-galactic-rclcpp, ros-galactic-rmf-building-map-msgs, ros-galactic-rmf-fleet-msgs, ros-galactic-rmf-robot-sim-common, ros-galactic-ros-workspace
+Description: ROS 2 Gazebo plugins for TeleportIngestors, TeleportDispensers and Readonly Objects
