@@ -1,0 +1,12 @@
+Source: ros-humble-rmf-robot-sim-common
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-humble-ament-cmake, ros-humble-geometry-msgs, ros-humble-rclcpp, ros-humble-rmf-building-map-msgs, ros-humble-rmf-dispenser-msgs, ros-humble-rmf-fleet-msgs, ros-humble-rmf-ingestor-msgs, ros-humble-std-msgs, ros-humble-tf2-ros, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rmf-robot-sim-common
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-humble-geometry-msgs, ros-humble-rclcpp, ros-humble-rmf-building-map-msgs, ros-humble-rmf-dispenser-msgs, ros-humble-rmf-fleet-msgs, ros-humble-rmf-ingestor-msgs, ros-humble-std-msgs, ros-humble-tf2-ros, ros-humble-ros-workspace
+Description: Common utility functions for Gazebo and ignition RMF plugins
