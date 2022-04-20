@@ -1,1 +1,1 @@
-{"base": "6dc7a1d", "parent": "debian/rolling/rmf_building_sim_common", "previous": "d4dc389", "trim": "", "trimbase": ""}
+{"base": "102b3aa", "parent": "debian/humble/rmf_building_sim_common", "previous": "0a6dc65", "trim": "", "trimbase": ""}
