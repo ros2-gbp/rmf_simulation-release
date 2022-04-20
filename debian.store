@@ -1,1 +1,1 @@
-{"base": "b503a1f", "parent": "debian/rolling/rmf_building_sim_ignition_plugins", "previous": "3356394", "trim": "", "trimbase": ""}
+{"base": "c660704", "parent": "debian/humble/rmf_building_sim_ignition_plugins", "previous": "b13bb84", "trim": "", "trimbase": ""}
