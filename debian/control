@@ -1,0 +1,12 @@
+Source: ros-humble-rmf-robot-sim-ignition-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, libqt5core5a, libqt5qml5, libqt5quick5, ros-humble-ament-cmake, ros-humble-rclcpp, ros-humble-rmf-building-map-msgs, ros-humble-rmf-fleet-msgs, ros-humble-rmf-robot-sim-common, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rmf-robot-sim-ignition-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, libqt5core5a, libqt5qml5, libqt5quick5, ros-humble-rclcpp, ros-humble-rmf-building-map-msgs, ros-humble-rmf-fleet-msgs, ros-humble-rmf-robot-sim-common, ros-humble-ros-workspace
+Description: ROS 2 Ignition plugins for TeleportIngestors and TeleportDispensers
