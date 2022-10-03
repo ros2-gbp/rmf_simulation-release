@@ -1,6 +1,6 @@
-# rmf\_building\_sim\_common
+# rmf\_robot\_sim\_gz_\_plugins
 
-This package provides a common library for the Ignition and Gazebo simulator plugins for simulated building infrastructure.
+This package provides Gazebo simulator plugins for the robots used in the RMF demos.
 
 ## Quality Declaration
 
