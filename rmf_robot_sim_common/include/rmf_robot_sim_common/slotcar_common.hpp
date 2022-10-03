@@ -34,75 +34,37 @@
 
 namespace rmf_robot_sim_common {
 
-// TODO migrate ign-math-eigen conversions when upgrading to ign-math5
-
-// Edit reference of parameter for template type deduction
-template<typename IgnQuatT>
-inline void convert(const Eigen::Quaterniond& _q, IgnQuatT& quat)
+struct SlotcarTrajectory
 {
-  quat.W() = _q.w();
-  quat.X() = _q.x();
-  quat.Y() = _q.y();
-  quat.Z() = _q.z();
-}
+  SlotcarTrajectory(const Eigen::Isometry3d& _pose)
+  : pose(_pose)
+  {}
+  SlotcarTrajectory() {}
+  // positions
+  Eigen::Isometry3d pose;
+  // Maximum speed for the lane approaching this waypoint
+  std::optional<double> approach_speed_limit;
+};
 
-template<typename IgnVec3T>
-inline void convert(const Eigen::Vector3d& _v, IgnVec3T& vec)
+// steering type constants
+enum class SteeringType
 {
-  vec.X() = _v[0];
-  vec.Y() = _v[1];
-  vec.Z() = _v[2];
-}
-
-template<typename IgnVec3T>
-inline Eigen::Vector3d convert_vec(const IgnVec3T& _v)
-{
-  return Eigen::Vector3d(_v[0], _v[1], _v[2]);
-}
-
-template<typename IgnQuatT>
-inline Eigen::Quaterniond convert_quat(const IgnQuatT& _q)
-{
-  Eigen::Quaterniond quat;
-  quat.w() = _q.W();
-  quat.x() = _q.X();
-  quat.y() = _q.Y();
-  quat.z() = _q.Z();
-
-  return quat;
-}
-
-template<typename IgnPoseT>
-inline auto convert(const Eigen::Isometry3d& _tf)
-{
-  IgnPoseT pose;
-  convert(Eigen::Vector3d(_tf.translation()), pose.Pos());
-  convert(Eigen::Quaterniond(_tf.linear()), pose.Rot());
-
-  return pose;
-}
-
-template<typename IgnPoseT>
-inline Eigen::Isometry3d convert_pose(const IgnPoseT& _pose)
-{
-  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
-  tf.translation() = convert_vec(_pose.Pos());
-  tf.linear() = Eigen::Matrix3d(convert_quat(_pose.Rot()));
-
-  return tf;
-}
-
-typedef struct TrajectoryPoint
-{
-  Eigen::Vector3d pos;
-  Eigen::Quaterniond quat;
-  TrajectoryPoint(const Eigen::Vector3d& _pos, const Eigen::Quaterniond& _quat)
-  : pos(_pos), quat(_quat) {}
-} TrajectoryPoint;
+  DIFF_DRIVE,
+  ACKERMANN
+};
 
 class SlotcarCommon
 {
 public:
+  struct UpdateResult
+  {
+    double v = 0.0; // Target displacement in X (forward)
+    double w = 0.0; // Target displacement in yaw
+    double target_linear_speed_now = 0.0;     // Target linear speed now
+    double target_linear_speed_destination = 0.0; // Target linear speed at destination
+    std::optional<double> max_speed = std::nullopt; // Maximum speed allowed while navigating
+  };
+
   SlotcarCommon();
 
   rclcpp::Logger logger() const;
@@ -116,7 +78,7 @@ public:
 
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  std::pair<double, double> update(const Eigen::Isometry3d& pose,
+  UpdateResult update(const Eigen::Isometry3d& pose,
     const std::vector<Eigen::Vector3d>& obstacle_positions,
     const double time);
 
@@ -125,25 +87,35 @@ public:
 
   std::array<double, 2> calculate_control_signals(const std::array<double,
     2>& curr_velocities,
-    const std::pair<double, double>& velocities,
-    const double dt) const;
+    const std::pair<double, double>& displacements,
+    const double dt,
+    const double target_velocity_now = 0.0,
+    const double target_velocity_at_dest = 0.0,
+    const std::optional<double>& linear_speed_limit = std::nullopt) const;
 
   std::array<double, 2> calculate_joint_control_signals(
     const std::array<double, 2>& w_tire,
-    const std::pair<double, double>& velocities,
-    const double dt) const;
-
-  std::array<double, 2> calculate_model_control_signals(
-    const std::array<double, 2>& curr_velocities,
-    const std::pair<double, double>& velocities,
-    const double dt) const;
+    const std::pair<double, double>& displacements,
+    const double dt,
+    const double target_linear_speed_now = 0.0,
+    const double target_linear_speed_destination = 0.0,
+    const std::optional<double>& linear_speed_limit = std::nullopt) const;
 
   void charge_state_cb(const std::string& name, bool selected);
 
   void publish_robot_state(const double time);
 
+  Eigen::Vector3d get_lookahead_point() const;
+
+  bool display_markers = false; // Ignition only: toggles display of waypoint and lookahead markers
+
+  using PathRequestCallback =
+    std::function<void(const rmf_fleet_msgs::msg::PathRequest::SharedPtr)>;
+  void set_path_request_callback(PathRequestCallback cb)
+  { _path_request_callback = cb; }
+
 private:
-  // Paramters needed for power dissipation and charging calculations
+  // Parameters needed for power dissipation and charging calculations
   // Default values may be overriden using values from sdf file
   struct PowerParams
   {
@@ -180,12 +152,10 @@ private:
   double last_topic_pub = 0.0;
   std::size_t _sequence = 0;
 
-  std::vector<Eigen::Isometry3d> trajectory;
-  std::size_t _traj_wp_idx;
+  std::vector<SlotcarTrajectory> trajectory;
+  std::size_t _traj_wp_idx = 0;
 
   rmf_fleet_msgs::msg::PauseRequest pause_request;
-
-  std::vector<rclcpp::Time> _hold_times;
 
   std::mutex _mutex;
 
@@ -198,11 +168,13 @@ private:
   // Assumes robot is stationary upon initialization
   Eigen::Vector3d _old_lin_vel = Eigen::Vector3d::Zero(); // Linear velocity at previous time step
   double _old_ang_vel = 0.0; // Angular velocity at previous time step
+  bool _was_rotating; // Whether robot was rotating towards its next target in previous time step
   Eigen::Isometry3d _pose; // Pose at current time step
   int _rot_dir = 1; // Current direction of rotation
 
   std::unordered_map<std::string, double> _level_to_elevation;
   bool _initialized_levels = false;
+  std::string _last_known_level = "";
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;
@@ -214,6 +186,8 @@ private:
     _building_map_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
+
+  SteeringType _steering_type = SteeringType::DIFF_DRIVE;
 
   std::string _current_task_id;
   std::vector<rmf_fleet_msgs::msg::Location> _remaining_path;
@@ -237,6 +211,11 @@ private:
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
 
+  double _min_turning_radius = -1.0; // minimum turning radius, will use a formula if negative
+  double _turning_right_angle_mul_offset = 1.0; // if _min_turning_radius is computed, this value multiplies it
+
+  bool _reversible = true; // true if the robot can drive backwards
+
   PowerParams _params;
   bool _enable_charge = true;
   bool _enable_instant_charge = false;
@@ -254,7 +233,12 @@ private:
 
   bool _docking = false;
 
-  std::string get_level_name(const double z) const;
+  Eigen::Vector3d _lookahead_point;
+  double _lookahead_distance = 8.0;
+
+  PathRequestCallback _path_request_callback = nullptr;
+
+  std::string get_level_name(const double z);
 
   double compute_change_in_rotation(
     const Eigen::Vector3d& heading_vec,
@@ -276,6 +260,14 @@ private:
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
   void map_cb(const rmf_building_map_msgs::msg::BuildingMap::SharedPtr msg);
+
+  UpdateResult update_diff_drive(
+    const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const double time);
+
+  UpdateResult update_ackermann(
+    const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const double time);
 
   bool near_charger(const Eigen::Isometry3d& pose) const;
 
@@ -304,6 +296,24 @@ bool get_element_val_if_present(
 template<typename SdfPtrT>
 void SlotcarCommon::read_sdf(SdfPtrT& sdf)
 {
+  std::string steering_type;
+  get_element_val_if_present<SdfPtrT, std::string>(sdf, "steering",
+    steering_type);
+
+  if (steering_type == "ackermann")
+  {
+    _steering_type = SteeringType::ACKERMANN;
+    _reversible = false;
+  }
+  else if (steering_type == "diff_drive")
+  {
+    _steering_type = SteeringType::DIFF_DRIVE;
+  }
+
+  RCLCPP_INFO(
+    logger(),
+    "Vehicle uses %s steering", steering_type.c_str());
+
   get_element_val_if_present<SdfPtrT, double>(sdf, "nominal_drive_speed",
     this->_nominal_drive_speed);
   RCLCPP_INFO(
@@ -347,6 +357,20 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     _max_turn_acceleration);
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
+    "min_turning_radius", this->_min_turning_radius);
+  RCLCPP_INFO(
+    logger(),
+    "Setting minimum turning radius to: %f",
+    _min_turning_radius);
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "turning_right_angle_mul_offset", this->_turning_right_angle_mul_offset);
+  RCLCPP_INFO(
+    logger(),
+    "Setting turning right angle multiplier offset to: %f",
+    _turning_right_angle_mul_offset);
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
     "stop_distance", this->_stop_distance);
   RCLCPP_INFO(logger(), "Setting stop distance to: %f", _stop_distance);
 
@@ -361,6 +385,10 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "base_width", this->_base_width);
   RCLCPP_INFO(logger(), "Setting base width to: %f", _base_width);
+
+  get_element_val_if_present<SdfPtrT, bool>(sdf,
+    "reversible", this->_reversible);
+  RCLCPP_INFO(logger(), "Setting reversible to: %d", _reversible);
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_voltage", this->_params.nominal_voltage);
@@ -407,6 +435,17 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     logger(),
     "Setting nominal power to: %f",
     _params.nominal_power);
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "lookahead_distance", this->_lookahead_distance);
+  RCLCPP_INFO(
+    logger(),
+    "Setting lookahead distance to: %f",
+    _lookahead_distance);
+
+  get_element_val_if_present<SdfPtrT, bool>(sdf,
+    "display_markers", this->display_markers);
+  RCLCPP_INFO(logger(), "Setting display_markers to: %d", display_markers);
 
   // Charger Waypoint coordinates are in child element of top level world element
   if (sdf->GetParent() && sdf->GetParent()->GetParent())
