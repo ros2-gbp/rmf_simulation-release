@@ -1,8 +1,8 @@
 <package format="3">
   <name>rmf_building_sim_common</name>
-  <version>1.2.0</version>
+  <version>2.0.0</version>
   <description>
-    Common utility functions for Gazebo and ignition building plugins
+    Common utility functions for Gazebo-classic and Gazebo building plugins
   </description>
   <author>Morgan Quigley</author>
   <author>Michael Grey</author>
@@ -11,6 +11,7 @@
   <author>Brandon Ong</author>
   <author>Kevin Ma</author>
   <author>Rushyendra Maganty</author>
+  <author>Yadunund</author>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
   <license>Apache 2.0</license>
