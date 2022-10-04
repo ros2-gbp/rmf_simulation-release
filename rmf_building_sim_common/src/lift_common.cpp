@@ -140,7 +140,7 @@ uint32_t LiftCommon::get_door_state(
   const auto doors = floor_to_door_map.find(
     _lift_state.current_floor)->second;
   const std::size_t num = doors.size();
-  for (const std::string door : doors)
+  for (const std::string& door : doors)
   {
     const auto& door_state = door_states.find(door)->second;
     if ((door_state) &&
@@ -256,6 +256,7 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
   _lift_state.destination_floor = initial_floor_name;
   _lift_state.door_state = LiftState::DOOR_CLOSED;
   _lift_state.motion_state = LiftState::MOTION_STOPPED;
+  _lift_state.current_mode = LiftState::MODE_AGV;
   for (const std::string& floor_name : _floor_names)
     _lift_state.available_floors.push_back(floor_name);
 }
