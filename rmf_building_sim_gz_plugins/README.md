@@ -1,6 +1,6 @@
-# rmf\_building\_sim\_common
+# rmf\_building\_sim\_gz\_plugins
 
-This package provides a common library for the Ignition and Gazebo simulator plugins for simulated building infrastructure.
+This package provides Gazebo plugins for allowing simulated building infrastructure to communicate with a ROS system.
 
 ## Quality Declaration
 
