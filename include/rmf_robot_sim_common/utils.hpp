@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #ifndef SRC__RMF_PLUGINS__UTILS_HPP
 #define SRC__RMF_PLUGINS__UTILS_HPP
 
@@ -52,15 +69,6 @@ struct SimEntity
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// TODO(MXG): Refactor the use of this function to replace it with
-// compute_desired_rate_of_change()
-double compute_ds(
-  double s_target,
-  double v_actual,
-  const double v_max,
-  const double accel_nom,
-  const double accel_max,
-  const double dt);
 
 struct MotionParams
 {
@@ -72,8 +80,10 @@ struct MotionParams
 };
 
 double compute_desired_rate_of_change(
-  double _s_target,
-  double _v_actual,
+  double _s_target,              // Displacement to destination
+  double _v_actual,              // Current velocity
+  double _speed_target_now,      // Target speed now while on route
+  double _speed_target_dest,     // Target speed at destination
   const MotionParams& _motion_params,
   const double _dt);
 
