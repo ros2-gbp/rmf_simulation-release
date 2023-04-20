@@ -1,0 +1,12 @@
+Source: ros-iron-rmf-building-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ignition-fortress, libqt5core5a, libqt5qml5, libqt5quick5, ros-iron-ament-cmake, ros-iron-menge-vendor, ros-iron-rclcpp, ros-iron-rmf-building-sim-common, ros-iron-rmf-fleet-msgs, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rmf-building-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ignition-fortress, libqt5core5a, libqt5qml5, libqt5quick5, ros-iron-menge-vendor, ros-iron-rclcpp, ros-iron-rmf-building-sim-common, ros-iron-rmf-fleet-msgs, ros-iron-ros-workspace
+Description: Gazebo plugins for building infrastructure simulation
