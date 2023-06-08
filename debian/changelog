@@ -1,0 +1,68 @@
+ros-rolling-rmf-building-sim-gz-classic-plugins (2.2.0-1jammy) jammy; urgency=high
+
+
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Wed, 07 Jun 2023 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (2.1.0-1jammy) jammy; urgency=high
+
+  * Switch to rst changelogs (#101 <https://github.com/open-rmf/rmf_simulation/pull/101>)
+  * Contributors: Yadunund
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Mon, 05 Jun 2023 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (2.0.0-1jammy) jammy; urgency=high
+
+  * Renamed to rmf_building_sim_gz_classic_plugins and Humble migration (#77 <https://github.com/open-rmf/rmf_simulation/pull/77>)
+  * Contributors: Luca Della Vedova, Yadunund
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Mon, 03 Oct 2022 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (1.3.0-1jammy) jammy; urgency=high
+
+  * Fix dependencies (#26 <https://github.com/open-rmf/rmf_simulation/pull/26>)
+  * fix compile error on qt > 5.14 (#27 <https://github.com/open-rmf/rmf_simulation/pull/27>)
+  * Changes for galactic (#25 <https://github.com/open-rmf/rmf_simulation/pull/25>)
+  * Make menge mandatory and fix building_sim dependencies (#19 <https://github.com/open-rmf/rmf_simulation/pull/19>)
+  * Add quality declaration documents (#1 <https://github.com/open-rmf/rmf_simulation/pull/1>)
+  * Crowd step size fix for large physics step sizes (#10 <https://github.com/open-rmf/rmf_simulation/pull/10>)
+  * Slotcar plugin package move and utils cleanup (#5 <https://github.com/open-rmf/rmf_simulation/pull/5>)
+  * account for renaming to rmf_building_map_tools (#4 <https://github.com/open-rmf/rmf_simulation/pull/4>)
+  * account for renaming from building_map_msgs to rmf_building_map_msgs (#3 <https://github.com/open-rmf/rmf_simulation/pull/3>)
+  * Contributors: Charayaphan Nakorn Boon Han, Geoffrey Biggs, Luca Della Vedova, Marco A. Gutiérrez, Teo Koon Peng, Yadunund
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Tue, 31 Aug 2021 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (1.2.0-1jammy) jammy; urgency=high
+
+  * Merge branch 'release-1.1'
+  * Control slotcar with model velocity cmds in place of joint velocity cmds (#236 <https://github.com/osrf/traffic_editor/pull/236>)
+  * Implement battery drain and recharge for slotcars (#242 <https://github.com/osrf/traffic_editor/pull/242>)
+  * Building_crowdsim for generating the navmesh file and required configuration files for menge
+  * (#224 <https://github.com/osrf/traffic_editor/pull/224>)
+  * Add animation switch to crowd simulation plugin (#238 <https://github.com/osrf/traffic_editor/pull/238>)
+  * Contributors: Geoffrey Biggs, Guoliang (Fred) Shao, Marco A. Gutierrez, Marco A. Gutiérrez, Rushyendra Maganty
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Tue, 05 Jan 2021 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (1.1.0-1jammy) jammy; urgency=high
+
+  * Implement model visibility toggling (#226 <https://github.com/osrf/traffic_editor/pull/226>)
+  * Add crowd simulation plugin (#218 <https://github.com/osrf/traffic_editor/pull/218>)
+  * Foxy support (#194 <https://github.com/osrf/traffic_editor/pull/194>)
+  * Modularization of doors and slotcar (#138 <https://github.com/osrf/traffic_editor/pull/13>)
+  * Add gazebo lift plugin
+  * Contributors: Charayaphan Nakorn Boon Han, Guoliang (Fred) Shao, Kevin_Skywalker, Luca Della Vedova, MakinoharaShouko, Yadunund
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Wed, 23 Sep 2020 16:00:00 -0000
+
+ros-rolling-rmf-building-sim-gz-classic-plugins (1.0.0-1jammy) jammy; urgency=high
+
+  * changed to using target_link_libraries to be specific (#95 <https://github.com/osrf/traffic_editor/pull/9>)
+  * Add support for single doors (#90 <https://github.com/osrf/traffic_editor/pull/9>)
+  * Add gazebo plugins used by rmf_building_map_tools generators (#89 <https://github.com/osrf/traffic_editor/pull/8>)
+  * Contributors: Aaron, Aaron Chong, Michael X. Grey, Morgan Quigley, Yadunund
+
+ -- Morgan Quigley <morgan@openrobotics.org>  Sun, 21 Jun 2020 16:00:00 -0000
+
+
