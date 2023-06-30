@@ -1,0 +1,12 @@
+Source: ros-iron-rmf-robot-sim-common
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-iron-ament-cmake, ros-iron-eigen3-cmake-module, ros-iron-geometry-msgs, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-dispenser-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-ingestor-msgs, ros-iron-std-msgs, ros-iron-tf2-ros, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rmf-robot-sim-common
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-iron-geometry-msgs, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-dispenser-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-ingestor-msgs, ros-iron-std-msgs, ros-iron-tf2-ros, ros-iron-ros-workspace
+Description: Common utility functions for Gazebo-classic and Gazebo RMF plugins
