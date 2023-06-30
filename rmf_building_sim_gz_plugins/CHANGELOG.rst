@@ -2,12 +2,12 @@
 Changelog for package rmf\_building\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.2 (2023-06-30)
+2.1.1 (2023-06-30)
 ------------------
-* Use ``JointPositionReset`` for open loop door control (`#105 <https://github.com/open-rmf/rmf_simulation/issues/105>`_)
+* Use JointPositionReset for open loop door control (`#106 <https://github.com/open-rmf/rmf_simulation/issues/106>`_)
 * Contributors: Luca Della Vedova
 
-2.0.1 (2023-06-02)
+2.1.0 (2023-06-06)
 ------------------
 * Switch to rst changelogs (`#101 <https://github.com/open-rmf/rmf_simulation/pull/101>`_)
 * Contributors: Yadunund
