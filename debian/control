@@ -1,0 +1,12 @@
+Source: ros-iron-rmf-robot-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ignition-fortress, libeigen3-dev, libqt5core5a, libqt5qml5, libqt5quick5, ros-iron-ament-cmake, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-robot-sim-common, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rmf-robot-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ignition-fortress, libeigen3-dev, libqt5core5a, libqt5qml5, libqt5quick5, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-robot-sim-common, ros-iron-ros-workspace
+Description: ROS 2 Gazebo plugins for TeleportIngestors and TeleportDispensers
