@@ -1,0 +1,12 @@
+Source: ros-iron-rmf-robot-sim-gz-classic-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-iron-ament-cmake, ros-iron-gazebo-dev, ros-iron-gazebo-ros, ros-iron-geometry-msgs, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-robot-sim-common, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rmf-robot-sim-gz-classic-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-iron-gazebo-dev, ros-iron-gazebo-ros, ros-iron-geometry-msgs, ros-iron-rclcpp, ros-iron-rmf-building-map-msgs, ros-iron-rmf-fleet-msgs, ros-iron-rmf-robot-sim-common, ros-iron-ros-workspace
+Description: ROS 2 Gazebo-classic plugins for TeleportIngestors, TeleportDispensers and Readonly Objects
