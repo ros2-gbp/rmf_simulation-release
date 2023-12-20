@@ -2,15 +2,12 @@
 Changelog for package rmf\_robot\_sim\_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.2 (2023-12-20)
+2.1.2 (2023-12-20)
 ------------------
-* Sanitize node names to avoid plugin exceptions (`#110 <https://github.com/open-rmf/rmf_simulation/pull/110>`_)
+* Sanitize node names to avoid plugin exceptions (`#112 <https://github.com/open-rmf/rmf_simulation/pull/112>`_)
 * Contributors: Luca Della Vedova
 
-2.2.1 (2023-06-30)
-------------------
-
-2.2.0 (2023-06-08)
+2.1.1 (2023-06-30)
 ------------------
 
 2.1.0 (2023-06-06)
