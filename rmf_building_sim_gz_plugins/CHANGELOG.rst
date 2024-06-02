@@ -2,15 +2,24 @@
 Changelog for package rmf\_building\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.1.2 (2023-12-20)
+2.3.0 (2024-06-01)
 ------------------
-* Sanitize node names to avoid plugin exceptions (`#112 <https://github.com/open-rmf/rmf_simulation/pull/112>`_)
+* Port outdated actions to Noble (`#122 <https://github.com/open-rmf/rmf_simulation/pull/122>`_)
+* Refactor plugins in an ECS based way and migrate to Harmonic (`#114 <https://github.com/open-rmf/rmf_simulation/pull/114>`_)
+* Contributors: Arjo Chakravarty, Grey, Luca Della Vedova
+
+2.2.2 (2023-12-20)
+------------------
+* Sanitize node names to avoid plugin exceptions (`#110 <https://github.com/open-rmf/rmf_simulation/pull/110>`_)
 * Contributors: Luca Della Vedova
 
-2.1.1 (2023-06-30)
+2.2.1 (2023-06-30)
 ------------------
-* Use JointPositionReset for open loop door control (`#106 <https://github.com/open-rmf/rmf_simulation/issues/106>`_)
+* Use ``JointPositionReset`` for open loop door control (`#98 <https://github.com/open-rmf/rmf_simulation/pull/98>`_)
 * Contributors: Luca Della Vedova
+
+2.2.0 (2023-06-08)
+------------------
 
 2.1.0 (2023-06-06)
 ------------------
