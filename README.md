@@ -1,3 +1,29 @@
+## rmf_simulation (rolling) - 2.3.0-1
+
+The packages in the `rmf_simulation` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling rmf_simulation` on `Sun, 02 Jun 2024 21:53:09 -0000`
+
+These packages were released:
+- `rmf_building_sim_gz_plugins`
+- `rmf_robot_sim_common`
+- `rmf_robot_sim_gz_plugins`
+
+Version of package(s) in repository `rmf_simulation`:
+
+- upstream repository: https://github.com/open-rmf/rmf_simulation.git
+- release repository: https://github.com/ros2-gbp/rmf_simulation-release.git
+- rosdistro version: `null`
+- old version: `2.2.2-1`
+- new version: `2.3.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.24.0`
+- rosdistro version: `0.9.1`
+- vcstools version: `0.1.42`
+
+
 ## rmf_simulation (iron) - 2.1.2-1
 
 The packages in the `rmf_simulation` repository were released into the `iron` distro by running `/usr/bin/bloom-release --rosdistro iron rmf_simulation` on `Wed, 20 Dec 2023 05:52:16 -0000`
