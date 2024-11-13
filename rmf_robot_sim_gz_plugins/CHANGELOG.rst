@@ -2,7 +2,14 @@
 Changelog for package rmf\_robot\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.2 (2024-06-15)
+2.4.1 (2024-11-13)
+------------------
+* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
+* Miscellaneous fixes for Ionic (`#134 <https://github.com/open-rmf/rmf_simulation/issues/134>`_)
+* Enable cart attachment in slotcar (`#120 <https://github.com/open-rmf/rmf_simulation/issues/120>`_)
+* Contributors: Addisu Z. Taddese, Luca Della Vedova, Xiyu
+
+2.4.0 (2024-06-12)
 ------------------
 
 2.3.1 (2024-06-12)

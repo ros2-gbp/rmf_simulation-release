@@ -2,7 +2,12 @@
 Changelog for package rmf\_robot\_sim\_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.2 (2024-06-15)
+2.4.1 (2024-11-13)
+------------------
+* Enable cart attachment in slotcar (`#120 <https://github.com/open-rmf/rmf_simulation/issues/120>`_)
+* Contributors: Luca Della Vedova, Xiyu
+
+2.4.0 (2024-06-12)
 ------------------
 
 2.3.1 (2024-06-12)
