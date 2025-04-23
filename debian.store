@@ -1,1 +1,1 @@
-{"base": "be58acf", "parent": "debian/rolling/rmf_robot_sim_gz_plugins", "previous": "d8da0ae", "trim": "", "trimbase": ""}
+{"base": "fea5d3b7d252", "parent": "debian/kilted/rmf_robot_sim_gz_plugins", "previous": "1f71b031ca12", "trim": "", "trimbase": ""}
