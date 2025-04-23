@@ -1,0 +1,7 @@
+rmf_building_sim_common
+rmf_building_sim_gazebo_plugins
+rmf_building_sim_gz_classic_plugins
+rmf_building_sim_ignition_plugins
+rmf_robot_sim_gazebo_plugins
+rmf_robot_sim_gz_classic_plugins
+rmf_robot_sim_ignition_plugins
