@@ -1,0 +1,12 @@
+Source: ros-kilted-rmf-robot-sim-common
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-kilted-ament-cmake, ros-kilted-eigen3-cmake-module, ros-kilted-geometry-msgs, ros-kilted-rclcpp, ros-kilted-rmf-building-map-msgs, ros-kilted-rmf-fleet-msgs, ros-kilted-std-msgs, ros-kilted-tf2-ros, ros-kilted-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-kilted-rmf-robot-sim-common
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-kilted-geometry-msgs, ros-kilted-rclcpp, ros-kilted-rmf-building-map-msgs, ros-kilted-rmf-fleet-msgs, ros-kilted-std-msgs, ros-kilted-tf2-ros, ros-kilted-ros-workspace
+Description: Common utility functions for Gazebo-classic and Gazebo RMF plugins
