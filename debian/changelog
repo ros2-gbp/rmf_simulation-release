@@ -1,0 +1,92 @@
+ros-kilted-rmf-robot-sim-gz-plugins (2.5.0-1noble) noble; urgency=high
+
+  * Recreate vel cmd components each cycle (#141 <https://github.com/open-rmf/rmf_simulation/issues/141>)
+  * Port dispenser/ingestor common code to TeleportDispenser and TeleportIngestor (#139 <https://github.com/open-rmf/rmf_simulation/issues/139>)
+  * Contributors: Grey, Xiyu
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Fri, 09 May 2025 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.4.1-1noble) noble; urgency=high
+
+  * Add environment hooks for plugins path (#136 <https://github.com/open-rmf/rmf_simulation/issues/136>)
+  * Miscellaneous fixes for Ionic (#134 <https://github.com/open-rmf/rmf_simulation/issues/134>)
+  * Enable cart attachment in slotcar (#120 <https://github.com/open-rmf/rmf_simulation/issues/120>)
+  * Contributors: Addisu Z. Taddese, Luca Della Vedova, Xiyu
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 13 Nov 2024 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.4.0-1noble) noble; urgency=high
+
+
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 12 Jun 2024 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.3.1-1noble) noble; urgency=high
+
+
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 12 Jun 2024 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.3.0-1noble) noble; urgency=high
+
+  * Port outdated actions to Noble (#122 <https://github.com/open-rmf/rmf_simulation/pull/122>)
+  * Refactor plugins in an ECS based way and migrate to Harmonic (#114 <https://github.com/open-rmf/rmf_simulation/pull/114>)
+  * Contributors: Arjo Chakravarty, Grey, Luca Della Vedova
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Sat, 01 Jun 2024 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.2.2-1noble) noble; urgency=high
+
+  * Sanitize node names to avoid plugin exceptions (#110 <https://github.com/open-rmf/rmf_simulation/pull/110>)
+  * Contributors: Luca Della Vedova
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 20 Dec 2023 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.2.1-1noble) noble; urgency=high
+
+
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Fri, 30 Jun 2023 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.2.0-1noble) noble; urgency=high
+
+
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Thu, 08 Jun 2023 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (2.1.0-1noble) noble; urgency=high
+
+  * Switch to rst changelogs (#101 <https://github.com/open-rmf/rmf_simulation/pull/101>)
+  * Contributors: Yadunund
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Tue, 06 Jun 2023 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (1.3.0-1noble) noble; urgency=high
+
+  * Make Ignition Edifice dependency mandatory to fix binary builds (#45 <https://github.com/open-rmf/rmf_simulation/pull/45>)
+  * Change parameter tag from holonomic to steering (#46 <https://github.com/open-rmf/rmf_simulation/pull/46>)
+  * Change slotcar control to explicitly open loop (#43 <https://github.com/open-rmf/rmf_simulation/pull/43>)
+  * Nonholonomic slotcar turning fixes, add turning multiplier offset parameter, rename compute_ds variables (#41 <https://github.com/open-rmf/rmf_simulation/pull/41>)
+  * Support nonholonomic movement for slotcar (#33 <https://github.com/open-rmf/rmf_simulation/pull/33>)
+  * Skip updating ignition plugins when simulation is paused (#34 <https://github.com/open-rmf/rmf_simulation/pull/34>)
+  * Fix/dependencies (#26 <https://github.com/open-rmf/rmf_simulation/pull/26>)
+  * Add quality declaration documents (#1 <https://github.com/open-rmf/rmf_simulation/pull/1>)
+  * Add build and style actions (#11 <https://github.com/open-rmf/rmf_simulation/pull/11>)
+  * Update to Ignition Edifice (#8 <https://github.com/open-rmf/rmf_simulation/pull/8>)
+  * Slotcar plugin package move and utils cleanup (#5 <https://github.com/open-rmf/rmf_simulation/pull/5>)
+  * account for renaming from building_map_msgs to rmf_building_map_msgs (#3 <https://github.com/open-rmf/rmf_simulation/pull/3>)
+  * Package renames (#2 <https://github.com/open-rmf/rmf_simulation/pull/2>)
+  * Contributors: Charayaphan Nakorn Boon Han, Geoffrey Biggs, Luca Della Vedova, Marco A. Gutiérrez, ddengster
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 01 Sep 2021 00:00:00 -0000
+
+ros-kilted-rmf-robot-sim-gz-plugins (1.2.0-1noble) noble; urgency=high
+
+  * Provides the readonly Ignition plugin that emulates the behavior of a read_only fleet type. When attached to a steerable vehicle that operates on a known traffic graph, the plugin publishes a prediction of the vehicle's intended path to the rmf traffic database via its configured read_only_fleet_adapter. Other fleets operating in the space can plan routes to avoid the path of this vehicle.
+  * Provides TeleportDispenser Ignition plugin that is attached to the TeleportDispenser model in rmf_demo_assets. When loaded into Gazebo along side a "payload" model, the plugin will teleport the payload onto the nearest robot when it registers a rmf_dispenser_msgs::DispenserRequest message with target_guid matching its model name.
+  * Provides TeleportIngestor Ignition plugin that is attached to the TeleportIngestor model in rmf_demo_assets. When loaded into Gazebo, the plugin will teleport the payload off the nearest robot and onto its location, when it registers a rmf_dispenser_msgs::DispenserRequest message with target_guid matching its model name.
+  * Contributors: Aaron Chong, Luca Della Vedova, Yadunund, Rushyendra Maganty
+
+ -- Luca Della Vedova <luca@openrobotics.org>  Wed, 06 Jan 2021 00:00:00 -0000
+
+

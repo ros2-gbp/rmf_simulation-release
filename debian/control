@@ -1,0 +1,12 @@
+Source: ros-kilted-rmf-robot-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, libqt5core5t64, libqt5qml5, libqt5quick5, ros-kilted-ament-cmake, ros-kilted-gz-gui-vendor, ros-kilted-gz-msgs-vendor, ros-kilted-gz-plugin-vendor, ros-kilted-gz-rendering-vendor, ros-kilted-gz-sim-vendor, ros-kilted-gz-transport-vendor, ros-kilted-rclcpp, ros-kilted-rmf-building-map-msgs, ros-kilted-rmf-building-sim-gz-plugins, ros-kilted-rmf-dispenser-msgs, ros-kilted-rmf-fleet-msgs, ros-kilted-rmf-ingestor-msgs, ros-kilted-rmf-robot-sim-common, ros-kilted-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-kilted-rmf-robot-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, libqt5core5t64, libqt5qml5, libqt5quick5, ros-kilted-gz-gui-vendor, ros-kilted-gz-msgs-vendor, ros-kilted-gz-plugin-vendor, ros-kilted-gz-rendering-vendor, ros-kilted-gz-sim-vendor, ros-kilted-gz-transport-vendor, ros-kilted-rclcpp, ros-kilted-rmf-building-map-msgs, ros-kilted-rmf-building-sim-gz-plugins, ros-kilted-rmf-dispenser-msgs, ros-kilted-rmf-fleet-msgs, ros-kilted-rmf-ingestor-msgs, ros-kilted-rmf-robot-sim-common, ros-kilted-ros-workspace
+Description: ROS 2 Gazebo plugins for TeleportIngestors and TeleportDispensers
