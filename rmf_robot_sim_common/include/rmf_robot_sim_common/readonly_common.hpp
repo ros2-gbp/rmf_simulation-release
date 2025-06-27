@@ -24,6 +24,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 #include <string>
 
 #include <Eigen/Geometry>
@@ -97,6 +98,8 @@ private:
   double _lane_threshold = 0.2; // Meters
 
   std::string _current_task_id;
+
+  std::mutex _graph_update_mutex;
 
   void map_cb(const BuildingMap::SharedPtr msg);
   void initialize_graph();

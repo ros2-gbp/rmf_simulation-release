@@ -78,10 +78,6 @@ public:
 
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  using AttachCartCallback = std::function<bool(bool)>;
-  void set_attach_cart_callback(AttachCartCallback cb)
-  { _attach_cart_callback = cb; }
-
   UpdateResult update(const Eigen::Isometry3d& pose,
     const std::vector<Eigen::Vector3d>& obstacle_positions,
     const double time);
@@ -95,6 +91,14 @@ public:
     const double dt,
     const double target_velocity_now = 0.0,
     const double target_velocity_at_dest = 0.0,
+    const std::optional<double>& linear_speed_limit = std::nullopt) const;
+
+  std::array<double, 2> calculate_joint_control_signals(
+    const std::array<double, 2>& w_tire,
+    const std::pair<double, double>& displacements,
+    const double dt,
+    const double target_linear_speed_now = 0.0,
+    const double target_linear_speed_destination = 0.0,
     const std::optional<double>& linear_speed_limit = std::nullopt) const;
 
   void charge_state_cb(const std::string& name, bool selected);
@@ -152,6 +156,8 @@ private:
   std::size_t _traj_wp_idx = 0;
 
   rmf_fleet_msgs::msg::PauseRequest pause_request;
+
+  std::mutex _mutex;
 
   std::string _model_name;
   bool _emergency_stop = false;
@@ -225,11 +231,12 @@ private:
   // Straight line distance to charging waypoint within which charging can occur
   static constexpr double _charger_dist_thres = 0.3;
 
+  bool _docking = false;
+
   Eigen::Vector3d _lookahead_point;
   double _lookahead_distance = 8.0;
 
   PathRequestCallback _path_request_callback = nullptr;
-  AttachCartCallback _attach_cart_callback = nullptr;
 
   std::string get_level_name(const double z);
 

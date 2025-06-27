@@ -2,19 +2,17 @@
 Changelog for package rmf\_building\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.5.0 (2025-05-09)
+2.3.3 (2025-06-27)
 ------------------
-* Recreate vel cmd components each cycle (`#141 <https://github.com/open-rmf/rmf_simulation/issues/141>`_)
-* Contributors: Grey
+* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_) (`#144 <https://github.com/open-rmf/rmf_simulation/issues/144>`_)
+  * Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
+  * Build CI against jazzy
+  * Missed out asan and tsan
+  ---------
+  Co-authored-by: Luca Della Vedova <lucadv@intrinsic.ai>
+* Contributors: Xiyu
 
-2.4.1 (2024-11-13)
-------------------
-* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
-* Miscellaneous fixes for Ionic (`#134 <https://github.com/open-rmf/rmf_simulation/issues/134>`_)
-* Remove undefined behavior from the startup conditions (`#132 <https://github.com/open-rmf/rmf_simulation/issues/132>`_)
-* Contributors: Addisu Z. Taddese, Grey, Luca Della Vedova
-
-2.4.0 (2024-06-12)
+2.3.2 (2024-06-15)
 ------------------
 
 2.3.1 (2024-06-12)

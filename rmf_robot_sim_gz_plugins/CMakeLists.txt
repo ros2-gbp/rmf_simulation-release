@@ -37,8 +37,6 @@ find_package(gz-rendering REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
-find_package(rmf_dispenser_msgs REQUIRED)
-find_package(rmf_ingestor_msgs REQUIRED)
 find_package(rmf_building_map_msgs REQUIRED)
 find_package(rmf_robot_sim_common REQUIRED)
 find_package(rmf_building_sim_gz_plugins REQUIRED)
@@ -69,7 +67,6 @@ target_link_libraries(teleport_ingestor
 
 ament_target_dependencies(teleport_ingestor
     rmf_fleet_msgs
-    rmf_ingestor_msgs
     rclcpp
     rmf_robot_sim_common
     Eigen3
@@ -97,7 +94,6 @@ target_link_libraries(teleport_dispenser
 
 ament_target_dependencies(teleport_dispenser
     rmf_fleet_msgs
-    rmf_dispenser_msgs
     rclcpp
     rmf_robot_sim_common
     Eigen3
@@ -151,8 +147,6 @@ ament_target_dependencies(slotcar
   rmf_robot_sim_common
   rmf_building_sim_gz_plugins
   rmf_fleet_msgs
-  rmf_dispenser_msgs
-  rmf_ingestor_msgs
   rclcpp
 )
 
@@ -162,8 +156,6 @@ target_include_directories(slotcar
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${rmf_robot_sim_common_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
-    ${rmf_dispenser_msgs_INCLUDE_DIRS}
-    ${rmf_ingestor_msgs_INCLUDE_DIRS}
     ${rmf_building_map_msgs_INCLUDE_DIRS}
     ${rmf_building_sim_gz_plugins_INCLUDE_DIRS}
 )

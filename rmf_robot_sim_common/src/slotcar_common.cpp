@@ -165,7 +165,6 @@ static Eigen::Vector2d get_closest_point_on_line_segment(
 }
 
 using SlotcarCommon = rmf_robot_sim_common::SlotcarCommon;
-using RobotMode = rmf_fleet_msgs::msg::RobotMode;
 
 SlotcarCommon::SlotcarCommon()
 {
@@ -196,7 +195,7 @@ std::string SlotcarCommon::model_name() const
 
 void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 {
-  _current_mode.mode = RobotMode::MODE_MOVING;
+  _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
   _ros_node = std::move(node);
 
   _tf2_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(_ros_node);
@@ -264,6 +263,7 @@ void SlotcarCommon::path_request_cb(
 {
   if (path_request_valid(msg) == false)
     return;
+  std::lock_guard<std::mutex> lock(_mutex);
 
   const auto old_path = _remaining_path;
 
@@ -334,6 +334,7 @@ void SlotcarCommon::pause_request_cb(
   if (msg->robot_name != _model_name)
     return;
 
+  std::lock_guard<std::mutex> lock(_mutex);
   pause_request = *msg;
 }
 
@@ -354,7 +355,8 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
     max_lin_vel,
     _max_drive_acceleration,
     _nominal_drive_acceleration,
-    0.01};
+    0.01,
+    10000000.0};
   const double v_target = rmf_plugins_utils::compute_desired_rate_of_change(
     displacements.first,
     v_robot,
@@ -367,7 +369,8 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
     _nominal_turn_speed,
     _max_turn_acceleration,
     _nominal_turn_acceleration,
-    0.01};
+    0.01,
+    10000000.0};
   const double w_target = rmf_plugins_utils::compute_desired_rate_of_change(
     displacements.second,
     w_robot,
@@ -379,10 +382,50 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
   return std::array<double, 2>{v_target, w_target};
 }
 
+std::array<double, 2> SlotcarCommon::calculate_joint_control_signals(
+  const std::array<double, 2>& w_tire,
+  const std::pair<double, double>& displacements,
+  const double dt,
+  const double linear_speed_target_now,
+  const double linear_speed_target_destination,
+  const std::optional<double>& linear_speed_limit) const
+{
+  std::array<double, 2> curr_velocities;
+  curr_velocities[0] = (w_tire[0] + w_tire[1]) * _tire_radius / 2.0;
+  curr_velocities[1] = (w_tire[1] - w_tire[0]) * _tire_radius / _base_width;
+
+  std::array<double, 2> new_velocities = calculate_control_signals(
+    curr_velocities, displacements, dt, linear_speed_target_now,
+    linear_speed_target_destination,
+    linear_speed_limit);
+
+  std::array<double, 2> joint_signals;
+  for (std::size_t i = 0; i < 2; ++i)
+  {
+    const double yaw_sign = i == 0 ? -1.0 : 1.0;
+    joint_signals[i] = (new_velocities[0] / _tire_radius) + (yaw_sign *
+      new_velocities[1] * _base_width / (2.0 * _tire_radius));
+  }
+  return joint_signals;
+}
+
+std::string to_str(uint32_t type)
+{
+  if (rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME == type)
+    return "resume";
+  else if (rmf_fleet_msgs::msg::PauseRequest::TYPE_PAUSE_IMMEDIATELY == type)
+    return "pause immediately";
+  else if (rmf_fleet_msgs::msg::PauseRequest::TYPE_PAUSE_AT_CHECKPOINT == type)
+    return "pause at checkpoint";
+
+  return "UNKNOWN: " + std::to_string(type) + "??";
+}
+
 SlotcarCommon::UpdateResult SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const std::vector<Eigen::Vector3d>& obstacle_positions,
   const double time)
 {
+  std::lock_guard<std::mutex> lock(_mutex);
   _pose = pose;
   publish_robot_state(time);
 
@@ -447,53 +490,19 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
     if (stationary && in_charger_vicinity &&
       (_enable_instant_charge || _enable_charge))
     {
-      _current_mode.mode = RobotMode::MODE_CHARGING;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_CHARGING;
     }
-    else if (_current_mode.mode == RobotMode::MODE_DOCKING)
+    else if (_docking)
     {
-      // NOOP, keep the current mode
-    }
-    else if (_current_mode.mode == RobotMode::MODE_PERFORMING_ACTION)
-    {
-      if (_current_mode.performing_action.empty())
-      {
-        // Return to IDLE mode, no perform action specified
-        _current_mode.mode = RobotMode::MODE_IDLE;
-      }
-      else
-      {
-        if (_current_mode.performing_action == "attach_cart")
-        {
-          if (_attach_cart_callback != nullptr && _attach_cart_callback(true))
-            _current_mode.mode = RobotMode::MODE_ACTION_COMPLETED;
-          else
-            _current_mode.mode = RobotMode::MODE_IDLE;
-        }
-        else if (_current_mode.performing_action == "detach_cart")
-        {
-          if (_attach_cart_callback != nullptr && _attach_cart_callback(false))
-            _current_mode.mode = RobotMode::MODE_ACTION_COMPLETED;
-          else
-            _current_mode.mode = RobotMode::MODE_IDLE;
-        }
-        else
-        {
-          // Specified performing action not recognized, return to IDLE mode
-          _current_mode.mode = RobotMode::MODE_IDLE;
-        }
-      }
-    }
-    else if (_current_mode.mode == RobotMode::MODE_ACTION_COMPLETED)
-    {
-      // Do nothing
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_DOCKING;
     }
     else if (stationary)
     {
-      _current_mode.mode = RobotMode::MODE_IDLE;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_IDLE;
     }
     else
     {
-      _current_mode.mode = RobotMode::MODE_MOVING;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
     }
     _old_lin_vel = lin_vel;
     _old_ang_vel = ang_vel;
@@ -533,30 +542,16 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
 
     if (rotate_towards_next_target)
     {
-      if (_traj_wp_idx+1 < trajectory.size())
-      {
-        const auto dpos_next =
-          compute_dpos(trajectory.at(_traj_wp_idx+1).pose, _pose);
+      const auto goal_heading =
+        compute_heading(trajectory.at(_traj_wp_idx).pose);
 
-        const auto goal_heading =
-          compute_heading(trajectory.at(_traj_wp_idx+1).pose);
+      result.w = compute_change_in_rotation(
+        current_heading,
+        Eigen::Vector3d::Zero(),
+        &goal_heading);
 
-        double dir = 1.0;
-        result.w = compute_change_in_rotation(
-          current_heading, dpos_next, &goal_heading, &dir);
-
-        if (dir < 0.0)
-          current_heading *= -1.0;
-      }
-      else
-      {
-        const auto goal_heading =
-          compute_heading(trajectory.at(_traj_wp_idx).pose);
-        result.w = compute_change_in_rotation(
-          current_heading, goal_heading);
-      }
       result.target_linear_speed_now = 0.0;
-      _current_mode.mode = RobotMode::MODE_PAUSED;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_PAUSED;
     }
     else if (close_enough)
     {
@@ -582,12 +577,9 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
     if (!rotate_towards_next_target && _traj_wp_idx < trajectory.size())
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
-      auto goal_heading = compute_heading(trajectory.at(_traj_wp_idx).pose);
       double dir = 1.0;
-      result.w =
-        compute_change_in_rotation(current_heading, dpos, &goal_heading, &dir);
-      if (dir < 0.0)
-        current_heading *= -1.0;
+      result.w = compute_change_in_rotation(
+        current_heading, dpos, nullptr, &dir);
 
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
@@ -606,7 +598,8 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
     const auto goal_heading = compute_heading(trajectory.back().pose);
     result.w = compute_change_in_rotation(
       current_heading,
-      goal_heading);
+      Eigen::Vector3d::Zero(),
+      &goal_heading);
 
     result.v = 0.0;
   }
@@ -669,9 +662,9 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_ackermann(
     bool stationary = lin_vel.norm() < eps && std::abs(ang_vel) < eps;
 
     if (stationary)
-      _current_mode.mode = RobotMode::MODE_IDLE;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_IDLE;
     else
-      _current_mode.mode = RobotMode::MODE_MOVING;
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
 
     _old_lin_vel = lin_vel;
     _old_ang_vel = ang_vel;
@@ -884,7 +877,7 @@ std::string SlotcarCommon::get_level_name(const double z)
 double SlotcarCommon::compute_change_in_rotation(
   const Eigen::Vector3d& heading_vec,
   const Eigen::Vector3d& dpos,
-  const Eigen::Vector3d* traj_vec,
+  const Eigen::Vector3d* requested_heading,
   double* const dir) const
 {
   if (dpos.norm() < 1e-3)
@@ -895,12 +888,21 @@ double SlotcarCommon::compute_change_in_rotation(
   }
 
   Eigen::Vector3d target = dpos;
-  // If a traj_vec is provided and slotcar is reversible, of the two possible
-  // headings (dpos/-dpos), choose the one closest to traj_vec
-  if (traj_vec && _reversible)
+  if (requested_heading)
   {
-    const double dot = traj_vec->dot(dpos);
-    target = dot < 0 ? -dpos : dpos;
+    // If requested_heading was provided, use that instead of dpos because requested_heading means
+    // we are already close enough to the target
+    target = *requested_heading;
+  }
+  else if (_reversible)
+  {
+    // If no requested_heading is given then the robot needs to turn to face the
+    // direction that it needs to move towards, i.e. dpos. If the robot is
+    // reversible, then this dot product tells us if it should actually move
+    // towards the goal in reverse.
+    const auto dot = heading_vec.dot(target);
+
+    target = dot < 0 ? -target : target;
     // dir is negative if slotcar will need to reverse to go towards target
     if (dir)
     {
@@ -918,7 +920,10 @@ double SlotcarCommon::compute_change_in_rotation(
 
 void SlotcarCommon::publish_robot_state(const double time)
 {
-  const rclcpp::Time ros_time = rmf_plugins_utils::simulation_now(time);
+  const int32_t t_sec = static_cast<int32_t>(time);
+  const uint32_t t_nsec =
+    static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+  const rclcpp::Time ros_time{t_sec, t_nsec, RCL_ROS_TIME};
   if ((time - last_tf2_pub) > (1.0 / TF2_RATE))
   {
     // Publish tf2
@@ -977,14 +982,12 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
   robot_state_msg.task_id = _current_task_id;
   robot_state_msg.path = _remaining_path;
   robot_state_msg.mode = _current_mode;
-  // Pick the higher (most recent) one
-  robot_state_msg.mode.mode_request_id = std::max(pause_request.mode_request_id,
-      _current_mode.mode_request_id);
+  robot_state_msg.mode.mode_request_id = pause_request.mode_request_id;
 
   if (_adapter_error)
   {
     robot_state_msg.mode.mode =
-      RobotMode::MODE_ADAPTER_ERROR;
+      rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
   }
 
   robot_state_msg.seq = ++_sequence;
@@ -999,6 +1002,10 @@ void SlotcarCommon::mode_request_cb(
     return;
 
   _current_mode = msg->mode;
+  if (msg->mode.mode == msg->mode.MODE_DOCKING)
+    _docking = true;
+  else
+    _docking = false;
 }
 
 void SlotcarCommon::map_cb(

@@ -2,18 +2,15 @@
 Changelog for package rmf\_robot\_sim\_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.5.0 (2025-05-09)
+2.3.3 (2025-06-27)
 ------------------
-* Remove unused code from slotcar / readonly (`#140 <https://github.com/open-rmf/rmf_simulation/issues/140>`_)
-* Port dispenser/ingestor common code to TeleportDispenser and TeleportIngestor (`#139 <https://github.com/open-rmf/rmf_simulation/issues/139>`_)
-* Contributors: Luca Della Vedova, Xiyu
+* Cherry-pick reversibility fixes to jazzy (`#152 <https://github.com/open-rmf/rmf_simulation/issues/152>`_)
+  From `#150 <https://github.com/open-rmf/rmf_simulation/issues/150>`_
+  Co-authored-by: Luca Della Vedova <lucadv@intrinsic.ai>
+  Co-authored-by: Michael X. Grey <mxgrey@intrinsic.ai>
+* Contributors: Luca Della Vedova
 
-2.4.1 (2024-11-13)
-------------------
-* Enable cart attachment in slotcar (`#120 <https://github.com/open-rmf/rmf_simulation/issues/120>`_)
-* Contributors: Luca Della Vedova, Xiyu
-
-2.4.0 (2024-06-12)
+2.3.2 (2024-06-15)
 ------------------
 
 2.3.1 (2024-06-12)

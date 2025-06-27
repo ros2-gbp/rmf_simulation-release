@@ -5,8 +5,6 @@
 #include <gz/sim/System.hh>
 #include <gz/sim/Model.hh>
 #include <gz/sim/Util.hh>
-#include <gz/sim/components/DetachableJoint.hh>
-#include <gz/sim/components/Link.hh>
 #include <gz/sim/components/Model.hh>
 #include <gz/sim/components/Name.hh>
 #include <gz/sim/components/Pose.hh>
@@ -34,7 +32,6 @@ using namespace gz::sim;
 class GZ_SIM_VISIBLE SlotcarPlugin
   : public System,
   public ISystemConfigure,
-  public ISystemConfigurePriority,
   public ISystemPreUpdate
 {
 public:
@@ -44,26 +41,19 @@ public:
   void Configure(const Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
     EntityComponentManager& ecm, EventManager& eventMgr) override;
-  int32_t ConfigurePriority() override;
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override;
 
 private:
-  // Distance to attach cart, if none is found attaching will fail
-  static constexpr float MIN_ATTACHING_DIST = 1.0;
   std::unique_ptr<rmf_robot_sim_common::SlotcarCommon> dataPtr;
   gz::transport::Node _gz_node;
   rclcpp::Node::SharedPtr _ros_node;
 
-  EntityComponentManager* _ecm;
-
   Entity _entity;
-  Entity _joint_entity = kNullEntity;
-  Eigen::Isometry3d _pose;
   std::unordered_set<Entity> _obstacle_exclusions;
-  std::unordered_map<Entity, Eigen::Vector3d> _dispensable_positions;
   double _height = 0;
 
   bool _read_aabb_dimensions = true;
+  bool _remove_world_pose_cmd = false;
 
   // Previous velocities, used to do open loop velocity control
   double _prev_v_command = 0.0;
@@ -80,17 +70,11 @@ private:
   void init_obstacle_exclusions(EntityComponentManager& ecm);
   bool get_slotcar_height(const gz::msgs::Entity& req,
     gz::msgs::Double& rep);
-  std::pair<std::vector<Eigen::Vector3d>, std::unordered_map<Entity,
-    Eigen::Vector3d>>
-  get_obstacle_positions(EntityComponentManager& ecm);
+  std::vector<Eigen::Vector3d> get_obstacle_positions(
+    EntityComponentManager& ecm);
 
   void path_request_marker_update(
     const rmf_fleet_msgs::msg::PathRequest::SharedPtr);
-
-  bool attach_cart(bool attach);
-
-  bool attach_entity(const Entity& entity);
-  bool detach_entity();
 
   void draw_lookahead_marker();
 
@@ -113,88 +97,15 @@ SlotcarPlugin::~SlotcarPlugin()
 {
 }
 
-bool SlotcarPlugin::attach_cart(bool attach)
-{
-  if (attach)
-  {
-    // Find _dispensable_position closest to _pose
-    if (_dispensable_positions.size() == 0)
-      return false;
-    auto min_entity = _dispensable_positions.begin()->first;
-    auto min_dist = (_pose.translation() -
-      _dispensable_positions.begin()->second).norm();
-    for (const auto& [entity, pose] : _dispensable_positions)
-    {
-      auto dist = (_pose.translation() - pose).norm();
-      if (dist < min_dist)
-      {
-        min_dist = dist;
-        min_entity = entity;
-      }
-    }
-    if (min_dist > MIN_ATTACHING_DIST)
-      return false;
-
-    return attach_entity(min_entity);
-  }
-  else
-  {
-    return detach_entity();
-  }
-  return false;
-}
-
-bool SlotcarPlugin::detach_entity()
-{
-  _ecm->RequestRemoveEntity(_joint_entity);
-  _joint_entity = kNullEntity;
-  return true;
-}
-
-bool SlotcarPlugin::attach_entity(const Entity& entity)
-{
-  // A cart was already attached
-  if (_joint_entity != kNullEntity)
-    return true;
-
-  _joint_entity = _ecm->CreateEntity();
-
-  auto robot_link_entities = _ecm->ChildrenByComponents(_entity,
-      components::Link());
-  if (robot_link_entities.size() != 1)
-  {
-    gzwarn << "Robot should only have one link, using first" << std::endl;
-  }
-  auto robot_link_entity = robot_link_entities[0];
-
-  auto cart_link_entities = _ecm->ChildrenByComponents(entity,
-      components::Link());
-  if (cart_link_entities.size() != 1)
-  {
-    gzwarn << "Cart should only have one link, using first" << std::endl;
-  }
-  auto cart_link_entity = cart_link_entities[0];
-
-  _ecm->CreateComponent(
-    _joint_entity,
-    components::DetachableJoint({robot_link_entity,
-      cart_link_entity, "fixed"}));
-  return true;
-}
-
 void SlotcarPlugin::Configure(const Entity& entity,
   const std::shared_ptr<const sdf::Element>& sdf,
   EntityComponentManager& ecm, EventManager&)
 {
   _entity = entity;
-  _ecm = &ecm;
   auto model = Model(entity);
   std::string model_name = model.Name(ecm);
   dataPtr->set_model_name(model_name);
   dataPtr->read_sdf(sdf);
-  dataPtr->set_attach_cart_callback(std::bind(&SlotcarPlugin::
-    attach_cart,
-    this, std::placeholders::_1));
 
   // TODO proper argc argv
   char const** argv = NULL;
@@ -213,6 +124,9 @@ void SlotcarPlugin::Configure(const Entity& entity,
   enableComponent<components::Pose>(ecm, entity);
   // Initialize Bounding Box component
   enableComponent<components::AxisAlignedBox>(ecm, entity);
+  // Initialize Linear/AngularVelocityCmd components to drive slotcar
+  enableComponent<components::LinearVelocityCmd>(ecm, entity);
+  enableComponent<components::AngularVelocityCmd>(ecm, entity);
 
   // Respond to requests asking for height (e.g. for dispenser to dispense object)
   const std::string height_srv_name =
@@ -238,6 +152,11 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
   const double target_linear_speed_destination,
   const std::optional<double>& max_linear_velocity)
 {
+  auto lin_vel_cmd =
+    ecm.Component<components::LinearVelocityCmd>(_entity);
+  auto ang_vel_cmd =
+    ecm.Component<components::AngularVelocityCmd>(_entity);
+
   // Open loop control
   double v_robot = _prev_v_command;
   double w_robot = _prev_w_command;
@@ -246,13 +165,8 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
       displacements, dt, target_linear_speed_now,
       target_linear_speed_destination, max_linear_velocity);
 
-  gz::math::Vector3d lin_vel_cmd(0, 0, 0);
-  lin_vel_cmd[0] = target_vels[0];
-  gz::math::Vector3d ang_vel_cmd(0, 0, 0);
-  ang_vel_cmd[2] = target_vels[1];
-
-  ecm.SetComponentData<components::LinearVelocityCmd>(_entity, lin_vel_cmd);
-  ecm.SetComponentData<components::AngularVelocityCmd>(_entity, ang_vel_cmd);
+  lin_vel_cmd->Data()[0] = target_vels[0];
+  ang_vel_cmd->Data()[2] = target_vels[1];
 
   // Update previous velocities
   _prev_v_command = target_vels[0];
@@ -291,41 +205,32 @@ void SlotcarPlugin::init_obstacle_exclusions(EntityComponentManager& ecm)
   _obstacle_exclusions.insert(_entity);
 }
 
-std::pair<std::vector<Eigen::Vector3d>, std::unordered_map<Entity,
-  Eigen::Vector3d>>
-SlotcarPlugin::get_obstacle_positions(EntityComponentManager& ecm)
+std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
+  EntityComponentManager& ecm)
 {
   std::vector<Eigen::Vector3d> obstacle_positions;
-  std::unordered_map<Entity, Eigen::Vector3d> dispensable_positions;
   ecm.Each<components::Model, components::Name, components::Pose,
     components::Static>(
     [&](const Entity& entity,
     const components::Model*,
-    const components::Name* name,
+    const components::Name*,
     const components::Pose* pose,
     const components::Static* is_static
     ) -> bool
     {
-      const auto& n = name->Data();
       // Object should not be static
       // It should not be part of obstacle exclusions (doors/lifts/dispensables)
       // And it should be closer than the "stop" range (checked by common)
-      const auto object_position = pose->Data().Pos();
+      const auto obstacle_position = pose->Data().Pos();
       if (is_static->Data() == false &&
       _obstacle_exclusions.find(entity) == _obstacle_exclusions.end())
       {
         obstacle_positions.push_back(rmf_plugins_utils::convert_vec(
-          object_position));
-      }
-      // It is a dispensable object
-      if (n.find("dispensable") != std::string::npos)
-      {
-        dispensable_positions.insert({entity, rmf_plugins_utils::convert_vec(
-            object_position)});
+          obstacle_position));
       }
       return true;
     });
-  return {obstacle_positions, dispensable_positions};
+  return obstacle_positions;
 }
 
 void SlotcarPlugin::charge_state_cb(const gz::msgs::Selection& msg)
@@ -453,16 +358,6 @@ void SlotcarPlugin::draw_lookahead_marker()
   _gz_node.Request("/marker", marker_msg);
 }
 
-int32_t SlotcarPlugin::ConfigurePriority()
-{
-  // Set the priority down by one so this runs before the infrastructure plugin
-  // which should have a default priority of 0. This is important for ensuring
-  // that the linear velocity command component is created before the
-  // infrastructure plugin runs since the lift needs to adjust its z value, and
-  // the physics plugin removes the component on every update.
-  return -1;
-}
-
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
@@ -508,13 +403,12 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
     (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).count())
     * 1e-9;
 
-  _pose = rmf_plugins_utils::convert_pose(
-    ecm.Component<components::Pose>(_entity)->Data());
-  auto [obstacle_positions,
-    dispensable_positions] = get_obstacle_positions(ecm);
-  _dispensable_positions = std::move(dispensable_positions);
+  auto pose = ecm.Component<components::Pose>(_entity)->Data();
+  auto obstacle_positions = get_obstacle_positions(ecm);
 
-  auto update_result = dataPtr->update(_pose, obstacle_positions, time);
+  auto update_result =
+    dataPtr->update(rmf_plugins_utils::convert_pose(pose),
+      obstacle_positions, time);
 
   send_control_signals(ecm, {update_result.v, update_result.w}, dt,
     update_result.target_linear_speed_now,
@@ -532,7 +426,6 @@ GZ_ADD_PLUGIN(
   SlotcarPlugin,
   System,
   SlotcarPlugin::ISystemConfigure,
-  SlotcarPlugin::ISystemConfigurePriority,
   SlotcarPlugin::ISystemPreUpdate)
 
 GZ_ADD_PLUGIN_ALIAS(SlotcarPlugin, "slotcar")
