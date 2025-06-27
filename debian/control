@@ -1,0 +1,12 @@
+Source: ros-jazzy-rmf-building-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libqt5core5t64, libqt5qml5, libqt5quick5, ros-jazzy-ament-cmake, ros-jazzy-gz-gui-vendor, ros-jazzy-gz-msgs-vendor, ros-jazzy-gz-plugin-vendor, ros-jazzy-gz-rendering-vendor, ros-jazzy-gz-sim-vendor, ros-jazzy-gz-transport-vendor, ros-jazzy-menge-vendor, ros-jazzy-rclcpp, ros-jazzy-rmf-door-msgs, ros-jazzy-rmf-fleet-msgs, ros-jazzy-rmf-lift-msgs, ros-jazzy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rmf-building-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libqt5core5t64, libqt5qml5, libqt5quick5, ros-jazzy-gz-gui-vendor, ros-jazzy-gz-msgs-vendor, ros-jazzy-gz-plugin-vendor, ros-jazzy-gz-rendering-vendor, ros-jazzy-gz-sim-vendor, ros-jazzy-gz-transport-vendor, ros-jazzy-menge-vendor, ros-jazzy-rclcpp, ros-jazzy-rmf-door-msgs, ros-jazzy-rmf-fleet-msgs, ros-jazzy-rmf-lift-msgs, ros-jazzy-ros-workspace
+Description: Gazebo plugins for building infrastructure simulation
