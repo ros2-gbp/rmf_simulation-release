@@ -1,0 +1,12 @@
+Source: ros-jazzy-rmf-robot-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, libqt5core5t64, libqt5qml5, libqt5quick5, ros-jazzy-ament-cmake, ros-jazzy-gz-gui-vendor, ros-jazzy-gz-msgs-vendor, ros-jazzy-gz-plugin-vendor, ros-jazzy-gz-rendering-vendor, ros-jazzy-gz-sim-vendor, ros-jazzy-gz-transport-vendor, ros-jazzy-rclcpp, ros-jazzy-rmf-building-map-msgs, ros-jazzy-rmf-building-sim-gz-plugins, ros-jazzy-rmf-fleet-msgs, ros-jazzy-rmf-robot-sim-common, ros-jazzy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rmf-robot-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, libqt5core5t64, libqt5qml5, libqt5quick5, ros-jazzy-gz-gui-vendor, ros-jazzy-gz-msgs-vendor, ros-jazzy-gz-plugin-vendor, ros-jazzy-gz-rendering-vendor, ros-jazzy-gz-sim-vendor, ros-jazzy-gz-transport-vendor, ros-jazzy-rclcpp, ros-jazzy-rmf-building-map-msgs, ros-jazzy-rmf-building-sim-gz-plugins, ros-jazzy-rmf-fleet-msgs, ros-jazzy-rmf-robot-sim-common, ros-jazzy-ros-workspace
+Description: ROS 2 Gazebo plugins for TeleportIngestors and TeleportDispensers
