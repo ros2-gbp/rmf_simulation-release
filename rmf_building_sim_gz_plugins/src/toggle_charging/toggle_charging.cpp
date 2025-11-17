@@ -22,8 +22,8 @@
 #include <gz/gui/qt.h>
 #include <gz/gui/Plugin.hh>
 
-#include <gz/msgs.hh>
-#include <gz/transport.hh>
+#include <gz/msgs/selection.pb.h>
+#include <gz/transport/Node.hh>
 
 using namespace gz;
 using namespace gui;
@@ -74,6 +74,7 @@ void toggle_charging::LoadConfig(const tinyxml2::XMLElement* _pluginElem)
 
   if (this->title.empty())
     this->title = "Toggle Charging";
+  this->Context()->setContextProperty("qt_version", QVariant(QT_VERSION));
 }
 
 void toggle_charging::OnEnableCharge(bool checked)

@@ -76,7 +76,13 @@ public:
 
   std::string model_name() const;
 
+  void set_charger_positions(std::vector<Eigen::Vector3d> charger_positions);
+
   void init_ros_node(const rclcpp::Node::SharedPtr node);
+
+  using AttachCartCallback = std::function<bool(bool)>;
+  void set_attach_cart_callback(AttachCartCallback cb)
+  { _attach_cart_callback = cb; }
 
   UpdateResult update(const Eigen::Isometry3d& pose,
     const std::vector<Eigen::Vector3d>& obstacle_positions,
@@ -91,14 +97,6 @@ public:
     const double dt,
     const double target_velocity_now = 0.0,
     const double target_velocity_at_dest = 0.0,
-    const std::optional<double>& linear_speed_limit = std::nullopt) const;
-
-  std::array<double, 2> calculate_joint_control_signals(
-    const std::array<double, 2>& w_tire,
-    const std::pair<double, double>& displacements,
-    const double dt,
-    const double target_linear_speed_now = 0.0,
-    const double target_linear_speed_destination = 0.0,
     const std::optional<double>& linear_speed_limit = std::nullopt) const;
 
   void charge_state_cb(const std::string& name, bool selected);
@@ -156,8 +154,6 @@ private:
   std::size_t _traj_wp_idx = 0;
 
   rmf_fleet_msgs::msg::PauseRequest pause_request;
-
-  std::mutex _mutex;
 
   std::string _model_name;
   bool _emergency_stop = false;
@@ -226,17 +222,15 @@ private:
   const std::string _enable_drain_str = "_enable_drain";
   const double _soc_max = 1.0;
   double _soc = _soc_max;
-  std::unordered_map<std::string, std::vector<ChargerWaypoint>>
-  _charger_waypoints;
+  std::vector<Eigen::Vector3d> _charger_positions;
   // Straight line distance to charging waypoint within which charging can occur
   static constexpr double _charger_dist_thres = 0.3;
-
-  bool _docking = false;
 
   Eigen::Vector3d _lookahead_point;
   double _lookahead_distance = 8.0;
 
   PathRequestCallback _path_request_callback = nullptr;
+  AttachCartCallback _attach_cart_callback = nullptr;
 
   std::string get_level_name(const double z);
 
@@ -446,38 +440,6 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   get_element_val_if_present<SdfPtrT, bool>(sdf,
     "display_markers", this->display_markers);
   RCLCPP_INFO(logger(), "Setting display_markers to: %d", display_markers);
-
-  // Charger Waypoint coordinates are in child element of top level world element
-  if (sdf->GetParent() && sdf->GetParent()->GetParent())
-  {
-    auto parent = sdf->GetParent()->GetParent();
-    if (parent->HasElement("rmf_charger_waypoints"))
-    {
-      auto waypoints = parent->GetElement("rmf_charger_waypoints");
-      if (waypoints->HasElement("rmf_vertex"))
-      {
-        auto waypoint = waypoints->GetElement("rmf_vertex");
-        while (waypoint)
-        {
-          if (waypoint->HasAttribute("x") && waypoint->HasAttribute("y") &&
-            waypoint->HasAttribute("level"))
-          {
-            std::string lvl_name;
-            double x, y;
-            waypoint->GetAttribute("x")->Get(x);
-            waypoint->GetAttribute("y")->Get(y);
-            waypoint->GetAttribute("level")->Get(lvl_name);
-            _charger_waypoints[lvl_name].push_back(ChargerWaypoint(x, y));
-          }
-          waypoint = waypoint->GetNextElement("rmf_vertex");
-        }
-      }
-    }
-    else
-    {
-      RCLCPP_INFO(logger(), "No charger waypoints found.");
-    }
-  }
 
   RCLCPP_INFO(logger(), "Setting name to: %s", _model_name.c_str());
 }

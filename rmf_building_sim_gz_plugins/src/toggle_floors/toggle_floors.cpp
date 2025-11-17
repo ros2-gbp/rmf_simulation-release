@@ -31,7 +31,7 @@
 #include <gz/rendering/RenderEngine.hh>
 #include <gz/rendering/RenderingIface.hh>
 #include <gz/rendering/Scene.hh>
-#include <gz/transport.hh>
+#include <gz/transport/Node.hh>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rmf_fleet_msgs/msg/fleet_state.hpp>
@@ -182,6 +182,7 @@ void toggle_floors::LoadConfig(const tinyxml2::XMLElement* _pluginElem)
     });
 
   this->Context()->setContextProperty("qfloors", qfloors);
+  this->Context()->setContextProperty("qt_version", QVariant(QT_VERSION));
   gz::gui::App()->findChild<
     gz::gui::MainWindow*>()->installEventFilter(this);
 }

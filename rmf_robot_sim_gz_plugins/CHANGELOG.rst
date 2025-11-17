@@ -2,17 +2,31 @@
 Changelog for package rmf\_robot\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.3 (2025-06-27)
+2.6.1 (2025-11-17)
 ------------------
-* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_) (`#144 <https://github.com/open-rmf/rmf_simulation/issues/144>`_)
-  * Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
-  * Build CI against jazzy
-  * Missed out asan and tsan
-  ---------
-  Co-authored-by: Luca Della Vedova <lucadv@intrinsic.ai>
-* Contributors: Xiyu
+* Qt5 and Qt6 compatibility (`#157 <https://github.com/open-rmf/rmf_simulation/issues/157>`_)
+* Migrate to target_link_libraries (`#147 <https://github.com/open-rmf/rmf_simulation/issues/147>`_)
+* Contributors: Luca Della Vedova
 
-2.3.2 (2024-06-15)
+2.6.0 (2025-06-09)
+------------------
+* Use a world plugin for chargers registration (`#146 <https://github.com/open-rmf/rmf_simulation/issues/146>`_)
+* Contributors: Luca Della Vedova
+
+2.5.0 (2025-05-09)
+------------------
+* Recreate vel cmd components each cycle (`#141 <https://github.com/open-rmf/rmf_simulation/issues/141>`_)
+* Port dispenser/ingestor common code to TeleportDispenser and TeleportIngestor (`#139 <https://github.com/open-rmf/rmf_simulation/issues/139>`_)
+* Contributors: Grey, Xiyu
+
+2.4.1 (2024-11-13)
+------------------
+* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
+* Miscellaneous fixes for Ionic (`#134 <https://github.com/open-rmf/rmf_simulation/issues/134>`_)
+* Enable cart attachment in slotcar (`#120 <https://github.com/open-rmf/rmf_simulation/issues/120>`_)
+* Contributors: Addisu Z. Taddese, Luca Della Vedova, Xiyu
+
+2.4.0 (2024-06-12)
 ------------------
 
 2.3.1 (2024-06-12)

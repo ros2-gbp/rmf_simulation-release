@@ -82,8 +82,7 @@ void ReadonlyCommon::on_update(Eigen::Isometry3d& pose, double sim_time)
     initialize_start(_pose);
 
     _last_update_time = _sim_time;
-    const rclcpp::Time now(
-      std::move(rmf_plugins_utils::simulation_now(_sim_time)));
+    const rclcpp::Time now(rmf_plugins_utils::simulation_now(_sim_time));
 
     constexpr double battery_percent = 98.0;
     _robot_state_msg.name = _name;
@@ -163,8 +162,6 @@ void ReadonlyCommon::initialize_graph()
 {
   if (!_found_graph)
     return;
-
-  std::lock_guard<std::mutex> lock(_graph_update_mutex);
 
   _initialized_graph = false;
 
@@ -328,7 +325,6 @@ ReadonlyCommon::Path ReadonlyCommon::compute_path(
 
   for (std::size_t i = 0; i < _lookahead; i++)
   {
-    std::lock_guard<std::mutex> lock(_graph_update_mutex);
     auto wp = get_next_waypoint(start_wp, heading);
     _next_wp[i] = wp;
     // Add to path here
