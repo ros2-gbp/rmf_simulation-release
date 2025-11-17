@@ -1,0 +1,12 @@
+Source: ros-rolling-rmf-robot-sim-gz-plugins
+Section: misc
+Priority: optional
+Maintainer: Luca Della Vedova <luca@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, ros-rolling-ament-cmake, ros-rolling-gz-msgs-vendor, ros-rolling-gz-plugin-vendor, ros-rolling-gz-rendering-vendor, ros-rolling-gz-sim-vendor, ros-rolling-gz-transport-vendor, ros-rolling-rclcpp, ros-rolling-rmf-building-map-msgs, ros-rolling-rmf-building-sim-gz-plugins, ros-rolling-rmf-dispenser-msgs, ros-rolling-rmf-fleet-msgs, ros-rolling-rmf-ingestor-msgs, ros-rolling-rmf-robot-sim-common, ros-rolling-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-rmf-robot-sim-gz-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, ros-rolling-gz-msgs-vendor, ros-rolling-gz-plugin-vendor, ros-rolling-gz-rendering-vendor, ros-rolling-gz-sim-vendor, ros-rolling-gz-transport-vendor, ros-rolling-rclcpp, ros-rolling-rmf-building-map-msgs, ros-rolling-rmf-building-sim-gz-plugins, ros-rolling-rmf-dispenser-msgs, ros-rolling-rmf-fleet-msgs, ros-rolling-rmf-ingestor-msgs, ros-rolling-rmf-robot-sim-common, ros-rolling-ros-workspace
+Description: ROS 2 Gazebo plugins for TeleportIngestors and TeleportDispensers
