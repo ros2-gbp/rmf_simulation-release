@@ -194,6 +194,12 @@ std::string SlotcarCommon::model_name() const
   return _model_name;
 }
 
+void SlotcarCommon::set_charger_positions(
+  std::vector<Eigen::Vector3d> charger_positions)
+{
+  _charger_positions = std::move(charger_positions);
+}
+
 void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 {
   _current_mode.mode = RobotMode::MODE_MOVING;
@@ -533,28 +539,14 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
 
     if (rotate_towards_next_target)
     {
-      if (_traj_wp_idx+1 < trajectory.size())
-      {
-        const auto dpos_next =
-          compute_dpos(trajectory.at(_traj_wp_idx+1).pose, _pose);
+      const auto goal_heading =
+        compute_heading(trajectory.at(_traj_wp_idx).pose);
 
-        const auto goal_heading =
-          compute_heading(trajectory.at(_traj_wp_idx+1).pose);
+      result.w = compute_change_in_rotation(
+        current_heading,
+        Eigen::Vector3d::Zero(),
+        &goal_heading);
 
-        double dir = 1.0;
-        result.w = compute_change_in_rotation(
-          current_heading, dpos_next, &goal_heading, &dir);
-
-        if (dir < 0.0)
-          current_heading *= -1.0;
-      }
-      else
-      {
-        const auto goal_heading =
-          compute_heading(trajectory.at(_traj_wp_idx).pose);
-        result.w = compute_change_in_rotation(
-          current_heading, goal_heading);
-      }
       result.target_linear_speed_now = 0.0;
       _current_mode.mode = RobotMode::MODE_PAUSED;
     }
@@ -582,12 +574,8 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
     if (!rotate_towards_next_target && _traj_wp_idx < trajectory.size())
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
-      auto goal_heading = compute_heading(trajectory.at(_traj_wp_idx).pose);
       double dir = 1.0;
-      result.w =
-        compute_change_in_rotation(current_heading, dpos, &goal_heading, &dir);
-      if (dir < 0.0)
-        current_heading *= -1.0;
+      result.w = compute_change_in_rotation(current_heading, dpos, nullptr, &dir);
 
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
@@ -606,7 +594,8 @@ SlotcarCommon::UpdateResult SlotcarCommon::update_diff_drive(
     const auto goal_heading = compute_heading(trajectory.back().pose);
     result.w = compute_change_in_rotation(
       current_heading,
-      goal_heading);
+      Eigen::Vector3d::Zero(),
+      &goal_heading);
 
     result.v = 0.0;
   }
@@ -884,7 +873,7 @@ std::string SlotcarCommon::get_level_name(const double z)
 double SlotcarCommon::compute_change_in_rotation(
   const Eigen::Vector3d& heading_vec,
   const Eigen::Vector3d& dpos,
-  const Eigen::Vector3d* traj_vec,
+  const Eigen::Vector3d* requested_heading,
   double* const dir) const
 {
   if (dpos.norm() < 1e-3)
@@ -895,12 +884,21 @@ double SlotcarCommon::compute_change_in_rotation(
   }
 
   Eigen::Vector3d target = dpos;
-  // If a traj_vec is provided and slotcar is reversible, of the two possible
-  // headings (dpos/-dpos), choose the one closest to traj_vec
-  if (traj_vec && _reversible)
+  if (requested_heading)
   {
-    const double dot = traj_vec->dot(dpos);
-    target = dot < 0 ? -dpos : dpos;
+    // If requested_heading was provided, use that instead of dpos because requested_heading means
+    // we are already close enough to the target
+    target = *requested_heading;
+  }
+  else if (_reversible)
+  {
+    // If no requested_heading is given then the robot needs to turn to face the
+    // direction that it needs to move towards, i.e. dpos. If the robot is
+    // reversible, then this dot product tells us if it should actually move
+    // towards the goal in reverse.
+    const auto dot = heading_vec.dot(target);
+
+    target = dot < 0 ? -target : target;
     // dir is negative if slotcar will need to reverse to go towards target
     if (dir)
     {
@@ -1042,21 +1040,15 @@ void SlotcarCommon::charge_state_cb(
 
 bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const
 {
-  std::string lvl_name = _last_known_level;
-  auto waypoints_it = _charger_waypoints.find(lvl_name);
-  if (waypoints_it != _charger_waypoints.end())
+  for (const Eigen::Vector3d& position : _charger_positions)
   {
-    const std::vector<ChargerWaypoint>& waypoints = waypoints_it->second;
-    for (const ChargerWaypoint& waypoint : waypoints)
+    const double dist =
+      sqrt(pow(position[0] - pose.translation()[0], 2)
+        + pow(position[1] - pose.translation()[1], 2)
+        + pow(position[2] - pose.translation()[2], 2));
+    if (dist < _charger_dist_thres)
     {
-      // Assumes it is on the same Z-plane
-      double dist =
-        sqrt(pow(waypoint.x - pose.translation()[0], 2)
-          + pow(waypoint.y - pose.translation()[1], 2));
-      if (dist < _charger_dist_thres)
-      {
-        return true;
-      }
+      return true;
     }
   }
   return false;
