@@ -1,3 +1,38 @@
+## rmf_simulation (lyrical) - 2.7.0-1
+
+The packages in the `rmf_simulation` repository were released into the `lyrical` distro by running `/usr/bin/bloom-release --rosdistro lyrical rmf_simulation` on `Wed, 17 Jun 2026 03:46:10 -0000`
+
+These packages were released:
+- `rmf_building_sim_gz_plugins`
+- `rmf_robot_sim_common`
+- `rmf_robot_sim_gz_plugins`
+
+These packages were explicitly ignored:
+- `rmf_building_sim_common`
+- `rmf_building_sim_gazebo_plugins`
+- `rmf_building_sim_gz_classic_plugins`
+- `rmf_building_sim_ignition_plugins`
+- `rmf_robot_sim_gazebo_plugins`
+- `rmf_robot_sim_gz_classic_plugins`
+- `rmf_robot_sim_ignition_plugins`
+
+Version of package(s) in repository `rmf_simulation`:
+
+- upstream repository: https://github.com/open-rmf/rmf_simulation.git
+- release repository: https://github.com/ros2-gbp/rmf_simulation-release.git
+- rosdistro version: `2.6.1-3`
+- old version: `2.6.1-3`
+- new version: `2.7.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.3`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rmf_simulation (rolling) - 2.6.1-1
 
 The packages in the `rmf_simulation` repository were released into the `rolling` distro by running `/usr/bin/bloom-release rmf_simulation --ros-distro rolling` on `Mon, 17 Nov 2025 06:36:39 -0000`
