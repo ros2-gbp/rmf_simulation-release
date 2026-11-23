@@ -24,6 +24,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 #include <string>
 
 #include <Eigen/Geometry>
@@ -98,6 +99,8 @@ private:
 
   std::string _current_task_id;
 
+  std::mutex _graph_update_mutex;
+
   void map_cb(const BuildingMap::SharedPtr msg);
   void initialize_graph();
   double compute_ds(
@@ -119,8 +122,7 @@ void ReadonlyCommon::read_sdf(SdfPtrT& sdf)
   RCLCPP_INFO(logger(), "Setting level name to: %s", _level_name.c_str());
 
   if (sdf->HasElement("graph_index"))
-    _nav_graph_index =
-      static_cast<std::size_t>(sdf->template Get<uint64_t>("graph_index"));
+    _nav_graph_index = sdf->template Get<std::size_t>("graph_index");
   RCLCPP_INFO(logger(), "Setting nav graph index: %d", _nav_graph_index);
 
   if (sdf->HasElement("spawn_waypoint"))
@@ -128,8 +130,7 @@ void ReadonlyCommon::read_sdf(SdfPtrT& sdf)
   RCLCPP_INFO(logger(), "Setting start wp name: %s", _start_wp_name.c_str());
 
   if (sdf->HasElement("look_ahead"))
-    _lookahead =
-      static_cast<std::size_t>(sdf->template Get<uint64_t>("look_ahead"));
+    _lookahead = sdf->template Get<std::size_t>("look_ahead");
   _lookahead = _lookahead < 1 ? 1 : _lookahead;
   _next_wp.resize(_lookahead);
   _path.resize(_lookahead);

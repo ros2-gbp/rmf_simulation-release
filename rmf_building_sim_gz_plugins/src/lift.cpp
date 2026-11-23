@@ -8,11 +8,9 @@
 #include <gz/sim/components/Pose.hh>
 #include <gz/sim/components/Static.hh>
 #include <gz/sim/components/AxisAlignedBox.hh>
-#include <gz/sim/components/JointForceCmd.hh>
 #include <gz/sim/components/JointPosition.hh>
-#include <gz/sim/components/JointPositionReset.hh>
-#include <gz/sim/components/JointVelocity.hh>
 #include <gz/sim/components/JointVelocityCmd.hh>
+#include <gz/sim/components/JointPositionReset.hh>
 #include <gz/sim/components/LinearVelocityCmd.hh>
 #include <gz/sim/components/AngularVelocityCmd.hh>
 #include <gz/sim/components/PoseCmd.hh>
@@ -108,10 +106,11 @@ private:
       {
         const auto& lift = lift_comp->Data();
         auto cabin_joint_entity =
-          Model(entity).JointByName(ecm, lift.cabin_joint);
+        Model(entity).JointByName(ecm, lift.cabin_joint);
         enableComponent<components::AxisAlignedBox>(ecm, entity);
-        ecm.SetComponentData<components::JointPosition>(cabin_joint_entity, {0.0});
-        ecm.SetComponentData<components::JointVelocity>(cabin_joint_entity, {0.0});
+        enableComponent<components::JointPosition>(ecm, cabin_joint_entity);
+        ecm.CreateComponent<components::JointVelocityCmd>(cabin_joint_entity,
+        components::JointVelocityCmd({0.0}));
 
         LiftCommand lift_command;
         lift_command.request_type = LiftRequest::REQUEST_AGV_MODE;
@@ -160,7 +159,6 @@ private:
 
   void read_aabbs(EntityComponentManager& ecm)
   {
-    std::vector<Entity> remove_from;
     ecm.Each<components::AxisAlignedBox,
       components::Pose>([&](const Entity& entity,
       const components::AxisAlignedBox* aabb,
@@ -175,21 +173,10 @@ private:
           // TODO(luca) this could be a component instead of a hash map
           _initial_aabbs[entity] = aabb->Data();
           _initial_poses[entity] = pose->Data();
-          remove_from.push_back(entity);
+          enableComponent<components::AxisAlignedBox>(ecm, entity, false);
         }
         return true;
       });
-
-    for (const auto entity : remove_from)
-    {
-      // We remove this component from all the entities because we've observed
-      // a significant drop in RTF while lifts are moving if they contain this
-      // component.
-      //
-      // TODO(mxgrey): Identify why the RTF would drop, and see if there's a way
-      // to avoid removing this component.
-      enableComponent<components::AxisAlignedBox>(ecm, entity, false);
-    }
   }
 
   std::vector<std::string> get_available_floors(const LiftData& lift) const
@@ -216,7 +203,7 @@ private:
     }
 
     const auto lift_pos =
-      ecm.Component<components::Pose>(entity)->Data().Z();
+      ecm.Component<components::JointPosition>(joint_entity)->Data()[0];
 
     double smallest_error = std::numeric_limits<double>::infinity();
     std::string closest_floor_name;
@@ -297,13 +284,8 @@ private:
       return LiftState::MOTION_STOPPED;
     }
 
-    auto* lift_pos_component = ecm.Component<components::JointPosition>(joint_entity);
-    if (!lift_pos_component)
-    {
-      return LiftState::MOTION_STOPPED;
-    }
-
-    const auto lift_pos = lift_pos_component->Data()[0];
+    const auto lift_pos =
+      ecm.Component<components::JointPosition>(joint_entity)->Data()[0];
     const auto target_it = lift.floors.find(destination_floor);
 
     if (target_it != lift.floors.end())
@@ -383,11 +365,6 @@ private:
     const LiftData& lift, double dt, double target_elevation,
     double cur_elevation)
   {
-    for (auto joint : Model(entity).Joints(ecm))
-    {
-      ecm.RemoveComponent<components::JointForceCmd>(joint);
-    }
-
     auto joint_entity = Model(entity).JointByName(ecm, lift.cabin_joint);
     auto target_vel = 0.0;
     if (joint_entity != kNullEntity)
@@ -395,10 +372,8 @@ private:
       target_vel = calculate_target_velocity(target_elevation, cur_elevation,
           _last_cmd_vel[joint_entity], dt,
           lift.params);
-
-      ecm.SetComponentData<components::JointVelocityCmd>(joint_entity, {target_vel});
-      ecm.RemoveComponent<components::JointForceCmd>(joint_entity);
-
+      ecm.Component<components::JointVelocityCmd>(joint_entity)->Data() =
+      {target_vel};
       _last_cmd_vel[joint_entity] = target_vel;
     }
     return target_vel;
@@ -558,41 +533,21 @@ public:
     const double dt = to_seconds(info.dt);
     // Command lifts
     ecm.Each<components::Lift,
-      components::Pose>([&](const Entity& entity,
+      components::Pose,
+      components::LiftCmd>([&](const Entity& entity,
       const components::Lift* lift_comp,
-      const components::Pose* pose_comp) -> bool
+      const components::Pose* pose_comp,
+      const components::LiftCmd* lift_cmd_comp) -> bool
       {
-        const components::LiftCmd* lift_cmd_comp = ecm.Component<const components::LiftCmd>(entity);
-        const LiftCommand* lift_cmd = nullptr;
-        if (lift_cmd_comp)
-        {
-          lift_cmd = &lift_cmd_comp->Data();
-        }
-        else
-        {
-          const auto it = _last_lift_command.find(entity);
-          if (it != _last_lift_command.end())
-          {
-            lift_cmd = &it->second;
-          }
-          else
-          {
-            // We have no indication of where this lift should go, so
-            // just try to keep it in place.
-            auto cabin_joint_entity = Model(entity).JointByName(ecm, lift_comp->Data().cabin_joint);
-            ecm.SetComponentData<components::JointVelocityCmd>(cabin_joint_entity, {0.0});
-
-            return true;
-          }
-        }
-
         const auto& lift = lift_comp->Data();
         const auto& pose = pose_comp->Data();
 
-        const auto& destination_floor = lift_cmd->destination_floor;
+        const auto& lift_cmd = lift_cmd_comp->Data();
+
+        const auto& destination_floor = lift_cmd.destination_floor;
         const double target_elevation = lift.floors.at(
           destination_floor).elevation;
-        const auto target_door_state = lift_cmd->door_state;
+        const auto target_door_state = lift_cmd.door_state;
         const std::string cur_floor = get_current_floor(entity, ecm, lift);
 
         const auto doors = get_floor_doors(ecm, lift, cur_floor);
@@ -603,10 +558,8 @@ public:
           command_doors(ecm, doors, target_door_state);
           // Clear the command if it was finished
           if (destination_floor == cur_floor &&
-            all_doors_at_state(ecm, doors, target_door_state))
-          {
+          all_doors_at_state(ecm, doors, target_door_state))
             finished_cmds.insert(entity);
-          }
         }
         else
         {
@@ -615,18 +568,18 @@ public:
           if (all_doors_at_state(ecm, doors, DoorModeCmp::CLOSE))
           {
             auto target_velocity =
-              command_lift(entity, ecm, lift, dt, target_elevation, pose.Z());
-
+            command_lift(entity, ecm, lift, dt, target_elevation, pose.Z());
             // Move payloads as well
             if (target_velocity != 0.0)
             {
               auto payloads = get_payloads(ecm, entity);
-
               for (const Entity& payload : payloads)
               {
-                if (ecm.EntityHasComponentType(payload, components::LinearVelocityCmd().TypeId()))
+                if (ecm.EntityHasComponentType(payload,
+                components::LinearVelocityCmd().TypeId()))
                 {
-                  auto lin_vel_cmd = ecm.Component<components::LinearVelocityCmd>(payload);
+                  auto lin_vel_cmd =
+                  ecm.Component<components::LinearVelocityCmd>(payload);
                   lin_vel_cmd->Data()[2] = target_velocity;
                 }
               }

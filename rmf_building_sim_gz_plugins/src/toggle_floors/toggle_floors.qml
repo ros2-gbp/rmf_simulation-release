@@ -21,6 +21,7 @@ import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.2
 import QtQuick.Controls.Material.impl 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Controls.Styles 1.4
 
 ToolBar {
   Layout.minimumWidth: 280
@@ -45,11 +46,7 @@ ToolBar {
         Layout.leftMargin: 2
         checked: true
         onClicked: {
-          if (qt_version < 0x060000) {
-            toggle_floors.OnFloorChecked(text, checked)
-          } else {
-            _toggle_floors.OnFloorChecked(text, checked)
-          }
+          toggle_floors.OnFloorChecked(text, checked)
         }
       }
 

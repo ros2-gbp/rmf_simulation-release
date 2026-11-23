@@ -2,47 +2,22 @@
 Changelog for package rmf\_building\_sim\_gz\_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.8.1 (2026-11-18)
+2.3.4 (2026-11-23)
 ------------------
-* bump cmake version (`#171 <https://github.com/open-rmf/rmf_simulation/issues/171>`_)
-* Contributors: Aaron Chong
+* Remove undefined behavior from the startup conditions (`#132 <https://github.com/open-rmf/rmf_simulation/issues/132>`_) (`#172 <https://github.com/open-rmf/rmf_simulation/issues/172>`_)
+* Contributors: Arjo Chakravarty
 
-2.8.0 (2026-09-25)
+2.3.3 (2025-06-27)
 ------------------
-
-2.7.0 (2026-06-17)
-------------------
-* Lyrical compatibility (`#163 <https://github.com/open-rmf/rmf_simulation/issues/163>`_)
-  * Remove line that was causing UB segfault in gz_sim
-  * Return to removing AxisAlignedBox component
+* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_) (`#144 <https://github.com/open-rmf/rmf_simulation/issues/144>`_)
+  * Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
+  * Build CI against jazzy
+  * Missed out asan and tsan
   ---------
   Co-authored-by: Luca Della Vedova <lucadv@intrinsic.ai>
-* Contributors: Grey
+* Contributors: Xiyu
 
-2.6.1 (2025-11-17)
-------------------
-* Qt5 and Qt6 compatibility (`#157 <https://github.com/open-rmf/rmf_simulation/issues/157>`_)
-* Migrate to target_link_libraries (`#147 <https://github.com/open-rmf/rmf_simulation/issues/147>`_)
-* Contributors: Luca Della Vedova
-
-2.6.0 (2025-06-09)
-------------------
-* Use a world plugin for chargers registration (`#146 <https://github.com/open-rmf/rmf_simulation/issues/146>`_)
-* Contributors: Luca Della Vedova
-
-2.5.0 (2025-05-09)
-------------------
-* Recreate vel cmd components each cycle (`#141 <https://github.com/open-rmf/rmf_simulation/issues/141>`_)
-* Contributors: Grey
-
-2.4.1 (2024-11-13)
-------------------
-* Add environment hooks for plugins path (`#136 <https://github.com/open-rmf/rmf_simulation/issues/136>`_)
-* Miscellaneous fixes for Ionic (`#134 <https://github.com/open-rmf/rmf_simulation/issues/134>`_)
-* Remove undefined behavior from the startup conditions (`#132 <https://github.com/open-rmf/rmf_simulation/issues/132>`_)
-* Contributors: Addisu Z. Taddese, Grey, Luca Della Vedova
-
-2.4.0 (2024-06-12)
+2.3.2 (2024-06-15)
 ------------------
 
 2.3.1 (2024-06-12)
