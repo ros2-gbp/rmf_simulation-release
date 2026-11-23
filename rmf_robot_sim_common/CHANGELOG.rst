@@ -2,6 +2,36 @@
 Changelog for package rmf\_robot\_sim\_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.8.1 (2026-11-18)
+------------------
+* Read graph_index and look_ahead as uint64_t (`#175 <https://github.com/open-rmf/rmf_simulation/issues/175>`_)
+  ReadonlyCommon::read_sdf() reads both values with Get<std::size_t>().
+  sdformat keeps parameter values in a std::variant whose 64-bit
+  unsigned type is uint64_t. That is std::size_t on Linux, but on macOS
+  uint64_t is unsigned long long, and libc++ fails to compile the call
+  ("type not found in type list"). Read uint64_t and cast to std::size_t.
+* bump cmake version (`#171 <https://github.com/open-rmf/rmf_simulation/issues/171>`_)
+* Contributors: Aaron Chong, AntonHansel
+
+2.8.0 (2026-09-25)
+------------------
+* Fix deprecation warning and error on rolling (`#166 <https://github.com/open-rmf/rmf_simulation/issues/166>`_)
+* Contributors: Luca Della Vedova
+
+2.7.0 (2026-06-17)
+------------------
+* feat: publish collision string message during emergency stop (Resolves `#159 <https://github.com/open-rmf/rmf_simulation/issues/159>`_) (`#160 <https://github.com/open-rmf/rmf_simulation/issues/160>`_)
+  Implemented feature
+  This PR introduces a ROS 2 publisher to broadcast collision events, enabling automated CI and QA scripts to detect when simulated robots enter an emergency stop state.
+  Resolves: `#159 <https://github.com/open-rmf/rmf_simulation/issues/159>`_
+  # Implementation description
+  To allow external testing scripts (such as those needed for rmf_ros2`#504 <https://github.com/open-rmf/rmf_simulation/issues/504>`_) to detect simulation level collisions, the following approach was taken:
+  In slotcar_common.cpp, modified the emergency_stop() method. When need_to_stop evaluates to true (indicating the robot is too close to an obstacle based on stop_distance and stop_radius), the node publishes a string containing the _model_name. This ensures test scripts can identify exactly which robot triggered the collision state.
+  ---------
+  Co-authored-by: Grey <greyxmike@gmail.com>
+* Fix heading check in compute_change_in_rotation for slotcar (`#162 <https://github.com/open-rmf/rmf_simulation/issues/162>`_)
+* Contributors: Aditya Pachauri, kj
+
 2.6.1 (2025-11-17)
 ------------------
 * Fix reverse drive for slotcar (`#150 <https://github.com/open-rmf/rmf_simulation/issues/150>`_)
