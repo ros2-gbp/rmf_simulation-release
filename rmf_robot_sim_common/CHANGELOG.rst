@@ -2,6 +2,22 @@
 Changelog for package rmf\_robot\_sim\_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.8.1 (2026-11-18)
+------------------
+* Read graph_index and look_ahead as uint64_t (`#175 <https://github.com/open-rmf/rmf_simulation/issues/175>`_)
+  ReadonlyCommon::read_sdf() reads both values with Get<std::size_t>().
+  sdformat keeps parameter values in a std::variant whose 64-bit
+  unsigned type is uint64_t. That is std::size_t on Linux, but on macOS
+  uint64_t is unsigned long long, and libc++ fails to compile the call
+  ("type not found in type list"). Read uint64_t and cast to std::size_t.
+* bump cmake version (`#171 <https://github.com/open-rmf/rmf_simulation/issues/171>`_)
+* Contributors: Aaron Chong, AntonHansel
+
+2.8.0 (2026-09-25)
+------------------
+* Fix deprecation warning and error on rolling (`#166 <https://github.com/open-rmf/rmf_simulation/issues/166>`_)
+* Contributors: Luca Della Vedova
+
 2.7.0 (2026-06-17)
 ------------------
 * feat: publish collision string message during emergency stop (Resolves `#159 <https://github.com/open-rmf/rmf_simulation/issues/159>`_) (`#160 <https://github.com/open-rmf/rmf_simulation/issues/160>`_)
